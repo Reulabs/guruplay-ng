@@ -30,13 +30,13 @@ const TrackCard = ({ track, index, showIndex = false }: TrackCardProps) => {
   return (
     <div
       className={cn(
-        'group flex items-center gap-4 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer',
-        isCurrentTrack && 'bg-muted/50'
+        'group grid grid-cols-[16px_4fr_2fr_minmax(120px,1fr)] gap-4 items-center px-4 py-2 rounded-md hover:bg-secondary/60 transition-colors cursor-pointer',
+        isCurrentTrack && 'bg-secondary/60'
       )}
       onClick={handleClick}
     >
       {/* Index or Play Button */}
-      <div className="w-8 flex items-center justify-center">
+      <div className="flex items-center justify-center w-4">
         {showIndex && (
           <span className={cn(
             'text-sm tabular-nums group-hover:hidden',
@@ -52,43 +52,45 @@ const TrackCard = ({ track, index, showIndex = false }: TrackCardProps) => {
           {isCurrentTrack && isPlaying ? (
             <Pause className="h-4 w-4" />
           ) : (
-            <Play className="h-4 w-4" />
+            <Play className="h-4 w-4 fill-current" />
           )}
         </button>
       </div>
 
-      {/* Cover */}
-      <img
-        src={track.coverUrl}
-        alt={track.title}
-        className="h-10 w-10 rounded object-cover"
-      />
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className={cn(
-          'text-sm font-medium truncate',
-          isCurrentTrack && 'text-primary'
-        )}>
-          {track.title}
-        </p>
-        <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+      {/* Cover & Info */}
+      <div className="flex items-center gap-3 min-w-0">
+        <img
+          src={track.coverUrl}
+          alt={track.title}
+          className="h-10 w-10 rounded object-cover"
+        />
+        <div className="min-w-0">
+          <p className={cn(
+            'text-sm font-medium truncate hover:underline',
+            isCurrentTrack && 'text-primary'
+          )}>
+            {track.title}
+          </p>
+          <p className="text-xs text-muted-foreground truncate hover:underline hover:text-foreground">
+            {track.artist}
+          </p>
+        </div>
       </div>
 
       {/* Album */}
-      <p className="hidden md:block text-sm text-muted-foreground truncate w-40">
+      <p className="hidden md:block text-sm text-muted-foreground truncate hover:underline hover:text-foreground">
         {track.album}
       </p>
 
-      {/* Duration */}
-      <span className="text-sm text-muted-foreground tabular-nums">
-        {formatDuration(track.duration)}
-      </span>
-
-      {/* More Button */}
-      <button className="p-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
-        <MoreHorizontal className="h-4 w-4" />
-      </button>
+      {/* Duration & More */}
+      <div className="flex items-center justify-end gap-4">
+        <button className="p-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+        <span className="text-sm text-muted-foreground tabular-nums">
+          {formatDuration(track.duration)}
+        </span>
+      </div>
     </div>
   );
 };
