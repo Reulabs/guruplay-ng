@@ -6,16 +6,14 @@ interface ArtistCardProps {
 
 const ArtistCard = ({ artist }: ArtistCardProps) => {
   return (
-    <div className="group p-4 rounded-lg bg-card hover:bg-muted/50 transition-all cursor-pointer">
-      <div className="relative mb-4">
-        <img
-          src={artist.imageUrl}
-          alt={artist.name}
-          className="w-full aspect-square rounded-full object-cover shadow-lg"
-        />
-      </div>
-      <h3 className="font-semibold truncate text-center">{artist.name}</h3>
-      <p className="text-sm text-muted-foreground mt-1 text-center">Artist</p>
+    <div className="group p-3 rounded-lg bg-card hover:bg-secondary transition-colors cursor-pointer">
+      <img
+        src={artist.imageUrl}
+        alt={artist.name}
+        className="w-full aspect-square rounded-full object-cover mb-3"
+      />
+      <h3 className="font-medium text-sm truncate text-center">{artist.name}</h3>
+      <p className="text-xs text-muted-foreground mt-0.5 text-center">Artist</p>
     </div>
   );
 };
