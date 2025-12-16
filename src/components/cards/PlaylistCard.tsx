@@ -19,23 +19,23 @@ const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
   return (
     <div
       onClick={() => navigate(`/playlist/${playlist.id}`)}
-      className="group p-4 rounded-lg bg-card hover:bg-muted/50 transition-all cursor-pointer"
+      className="group p-3 rounded-lg bg-card hover:bg-secondary transition-colors cursor-pointer"
     >
-      <div className="relative mb-4">
+      <div className="relative mb-3">
         <img
           src={playlist.coverUrl}
           alt={playlist.name}
-          className="w-full aspect-square rounded-md object-cover shadow-lg"
+          className="w-full aspect-square rounded object-cover"
         />
         <button
           onClick={handlePlay}
-          className="absolute bottom-2 right-2 p-3 rounded-full gradient-primary text-primary-foreground opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105"
+          className="absolute bottom-2 right-2 p-2.5 rounded-full bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <Play className="h-5 w-5 ml-0.5" />
+          <Play className="h-4 w-4" />
         </button>
       </div>
-      <h3 className="font-semibold truncate">{playlist.name}</h3>
-      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+      <h3 className="font-medium text-sm truncate">{playlist.name}</h3>
+      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
         {playlist.description}
       </p>
     </div>
