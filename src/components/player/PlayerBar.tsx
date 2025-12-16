@@ -46,30 +46,30 @@ const PlayerBar = () => {
 
   if (!currentTrack) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-player border-t border-border flex items-center justify-center text-muted-foreground text-sm z-50">
+      <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-black border-t border-border flex items-center justify-center text-muted-foreground text-sm z-50">
         Select a track to play
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 bg-player border-t border-border z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-black border-t border-border z-50">
       <div className="h-full px-4 flex items-center justify-between gap-4">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0 w-[30%]">
           <img
             src={currentTrack.coverUrl}
             alt={currentTrack.title}
-            className="h-10 w-10 rounded object-cover"
+            className="h-14 w-14 rounded object-cover"
           />
           <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{currentTrack.title}</p>
-            <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+            <p className="text-sm font-medium truncate hover:underline cursor-pointer">{currentTrack.title}</p>
+            <p className="text-xs text-muted-foreground truncate hover:underline cursor-pointer">{currentTrack.artist}</p>
           </div>
           <button
             onClick={() => setLiked(!liked)}
             className={cn(
-              'hidden sm:block p-1.5 transition-colors',
+              'hidden sm:flex p-2 transition-colors',
               liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             )}
           >
@@ -78,12 +78,12 @@ const PlayerBar = () => {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col items-center gap-1 w-[40%] max-w-md">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-col items-center gap-1 w-[40%] max-w-[720px]">
+          <div className="flex items-center gap-2">
             <button
               onClick={toggleShuffle}
               className={cn(
-                'hidden sm:block p-1.5 transition-colors',
+                'hidden sm:flex p-2 transition-colors',
                 shuffle ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -91,26 +91,26 @@ const PlayerBar = () => {
             </button>
             <button
               onClick={previous}
-              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <SkipBack className="h-4 w-4" />
+              <SkipBack className="h-4 w-4 fill-current" />
             </button>
             <button
               onClick={toggle}
               className="p-2 rounded-full bg-foreground text-background hover:scale-105 transition-transform"
             >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
             </button>
             <button
               onClick={next}
-              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <SkipForward className="h-4 w-4" />
+              <SkipForward className="h-4 w-4 fill-current" />
             </button>
             <button
               onClick={toggleRepeat}
               className={cn(
-                'hidden sm:block p-1.5 transition-colors',
+                'hidden sm:flex p-2 transition-colors',
                 repeat !== 'off' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -120,7 +120,7 @@ const PlayerBar = () => {
 
           {/* Progress Bar */}
           <div className="hidden sm:flex items-center gap-2 w-full">
-            <span className="text-xs text-muted-foreground w-8 text-right tabular-nums">
+            <span className="text-[11px] text-muted-foreground w-10 text-right tabular-nums">
               {formatTime(progress)}
             </span>
             <Slider
@@ -130,7 +130,7 @@ const PlayerBar = () => {
               onValueChange={([value]) => seek(value)}
               className="flex-1"
             />
-            <span className="text-xs text-muted-foreground w-8 tabular-nums">
+            <span className="text-[11px] text-muted-foreground w-10 tabular-nums">
               {formatTime(duration)}
             </span>
           </div>
@@ -141,7 +141,7 @@ const PlayerBar = () => {
           <button
             onClick={() => setShowQueue(!showQueue)}
             className={cn(
-              'p-1.5 transition-colors',
+              'p-2 transition-colors',
               showQueue ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             )}
           >
@@ -149,7 +149,7 @@ const PlayerBar = () => {
           </button>
           <button
             onClick={() => setVolume(volume === 0 ? 0.7 : 0)}
-            className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
@@ -158,7 +158,7 @@ const PlayerBar = () => {
             max={100}
             step={1}
             onValueChange={([value]) => setVolume(value / 100)}
-            className="w-20"
+            className="w-24"
           />
         </div>
       </div>

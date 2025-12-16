@@ -10,7 +10,7 @@ const MainLayout = () => {
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto scrollbar-thin">
+      <main className="flex-1 overflow-y-auto scrollbar-thin rounded-lg bg-gradient-to-b from-zinc-800/50 to-background m-2 mb-0 md:mr-2 md:ml-0">
         <Outlet />
       </main>
 
