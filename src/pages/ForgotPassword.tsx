@@ -1,18 +1,15 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Music2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
-const Login = () => {
-  const navigate = useNavigate();
+const ForgotPassword = () => {
   const { toast } = useToast();
-  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,17 +17,20 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        throw error;
+      }
+
       toast({
-        title: "Logged in",
-        description: "Welcome back to Guruplay.",
+        title: "Reset link sent",
+        description: "Check your email for instructions to reset your password.",
       });
-      navigate("/dashboard");
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Check your credentials and try again.",
+        title: "Unable to send reset link",
+        description: error instanceof Error ? error.message : "Please try again in a moment.",
       });
     } finally {
       setIsLoading(false);
@@ -44,12 +44,12 @@ const Login = () => {
           <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
             <Music2 className="w-6 h-6 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Log in to Guruplay</h1>
+          <h1 className="text-3xl font-bold text-foreground text-center">Reset your Guruplay password</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email address</Label>
             <Input
               id="email"
               type="email"
@@ -61,38 +61,20 @@ const Login = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-[#121212] border-[#727272] focus:border-foreground"
-              required
-            />
-          </div>
-
           <Button
             type="submit"
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-full"
             disabled={isLoading}
           >
-            {isLoading ? "Logging in..." : "Log In"}
+            {isLoading ? "Sending link..." : "Send reset link"}
           </Button>
         </form>
 
-        <div className="border-t border-border pt-6 space-y-3 text-center">
-          <p>
-            <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground underline">
-              Forgot your password?
-            </Link>
-          </p>
+        <div className="border-t border-border pt-6 text-center">
           <p className="text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link to="/register" className="text-foreground hover:text-primary font-semibold underline">
-              Sign up for Guruplay
+            Remember your password?{" "}
+            <Link to="/login" className="text-foreground hover:text-primary font-semibold underline">
+              Log in to Guruplay
             </Link>
           </p>
         </div>
@@ -101,4 +83,5 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;
+
