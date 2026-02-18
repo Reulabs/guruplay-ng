@@ -8,6 +8,8 @@ import AnalyticsChart from "@/components/dashboard/AnalyticsChart";
 import TopSongsTable from "@/components/dashboard/TopSongsTable";
 import { supabase } from "@/lib/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 interface UploadedSong {
   id: string;
@@ -28,8 +30,15 @@ interface DashboardMetrics {
   listenersTrend: number;
 }
 
+interface WalletSummary {
+  balance: number;
+  currency: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadedSongs, setUploadedSongs] = useState<UploadedSong[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
@@ -44,18 +53,26 @@ const Dashboard = () => {
 
   const [chartData, setChartData] = useState<{ date: string; plays: number; listeners: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wallet, setWallet] = useState<WalletSummary | null>(null);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (user) {
+      loadDashboardData(user.id);
+    }
+  }, [user]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (userId: string) => {
     setLoading(true);
     try {
-      const { data: songs } = await supabase
-        .from('songs')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: songs, error: songsError } = await supabase
+        .from("songs")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (songsError) {
+        throw songsError;
+      }
 
       if (songs) {
         setUploadedSongs(
@@ -81,9 +98,9 @@ const Dashboard = () => {
         const analyticsData = await Promise.all(
           last7Days.map(async (date) => {
             const { data } = await supabase
-              .from('song_analytics')
-              .select('plays, unique_listeners')
-              .eq('date', date);
+              .from("song_analytics")
+              .select("plays, unique_listeners")
+              .eq("date", date);
 
             const dayPlays = data?.reduce((sum, d) => sum + d.plays, 0) || 0;
             const dayListeners = data?.reduce((sum, d) => sum + d.unique_listeners, 0) || 0;
@@ -99,14 +116,27 @@ const Dashboard = () => {
         setChartData(analyticsData);
 
         const { data: activityData } = await supabase
-          .from('user_activity')
-          .select('listen_duration, user_id')
-          .eq('activity_type', 'play');
+          .from("user_activity")
+          .select("listen_duration, user_id")
+          .eq("activity_type", "play");
 
         const uniqueListeners = new Set(activityData?.map(a => a.user_id) || []).size;
         const avgDuration = activityData && activityData.length > 0
           ? Math.round(activityData.reduce((sum, a) => sum + a.listen_duration, 0) / activityData.length)
           : 0;
+
+        const firstDay = analyticsData[0];
+        const lastDay = analyticsData[analyticsData.length - 1];
+
+        const playsTrend =
+          firstDay && firstDay.plays > 0
+            ? ((lastDay.plays - firstDay.plays) / firstDay.plays) * 100
+            : 0;
+
+        const listenersTrend =
+          firstDay && firstDay.listeners > 0
+            ? ((lastDay.listeners - firstDay.listeners) / firstDay.listeners) * 100
+            : 0;
 
         setMetrics({
           totalSongs: songs.length,
@@ -114,72 +144,133 @@ const Dashboard = () => {
           totalListeners: uniqueListeners,
           avgListenTime: avgDuration,
           totalLikes,
-          playsTrend: 12.5,
-          listenersTrend: 8.3,
+          playsTrend,
+          listenersTrend,
         });
+
+        const { data: walletRows, error: walletError } = await supabase
+          .from("wallets")
+          .select("balance, currency")
+          .eq("user_id", userId)
+          .limit(1);
+
+        if (walletError) {
+          throw walletError;
+        }
+
+        if (walletRows && walletRows.length > 0) {
+          setWallet({
+            balance: Number(walletRows[0].balance),
+            currency: walletRows[0].currency,
+          });
+        } else {
+          setWallet(null);
+        }
       }
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error("Error loading dashboard data:", error);
 
-      setUploadedSongs([
-        {
-          id: "1",
-          name: "My First Track",
-          artist: "You",
-          coverUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
-          plays: 1234,
-          uploadedAt: "2024-01-15",
-        },
-        {
-          id: "2",
-          name: "Summer Vibes",
-          artist: "You",
-          coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300",
-          plays: 567,
-          uploadedAt: "2024-01-10",
-        },
-      ]);
+      toast({
+        variant: "destructive",
+        title: "Unable to load dashboard data",
+        description: error instanceof Error ? error.message : "Please try again in a moment.",
+      });
 
-      setChartData([
-        { date: 'Jan 10', plays: 120, listeners: 45 },
-        { date: 'Jan 11', plays: 150, listeners: 52 },
-        { date: 'Jan 12', plays: 180, listeners: 61 },
-        { date: 'Jan 13', plays: 140, listeners: 48 },
-        { date: 'Jan 14', plays: 200, listeners: 72 },
-        { date: 'Jan 15', plays: 220, listeners: 85 },
-        { date: 'Jan 16', plays: 260, listeners: 98 },
-      ]);
-
+      setUploadedSongs([]);
+      setChartData([]);
       setMetrics({
-        totalSongs: 2,
-        totalPlays: 1801,
-        totalListeners: 245,
-        avgListenTime: 142,
-        totalLikes: 89,
-        playsTrend: 12.5,
-        listenersTrend: 8.3,
+        totalSongs: 0,
+        totalPlays: 0,
+        totalListeners: 0,
+        avgListenTime: 0,
+        totalLikes: 0,
+        playsTrend: 0,
+        listenersTrend: 0,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+      navigate("/login");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    }
   };
 
-  const handleSongUploaded = async (song: Omit<UploadedSong, "id" | "plays" | "uploadedAt">) => {
+  const handleSongUploaded = async (song: {
+    name: string;
+    artist: string;
+    album: string;
+    genre: string;
+    description: string;
+    coverFile: File | null;
+    audioFile: File;
+  }) => {
+    if (!user) {
+      return;
+    }
+
     try {
+      const audioPath = `${user.id}/${Date.now()}-${song.audioFile.name}`;
+
+      const { error: audioError } = await supabase.storage.from("song-audio").upload(audioPath, song.audioFile, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+      if (audioError) {
+        throw audioError;
+      }
+
+      const {
+        data: { publicUrl: audioUrl },
+      } = supabase.storage.from("song-audio").getPublicUrl(audioPath);
+
+      let coverUrl = "";
+
+      if (song.coverFile) {
+        const coverPath = `${user.id}/${Date.now()}-${song.coverFile.name}`;
+
+        const { error: coverError } = await supabase.storage
+          .from("song-covers")
+          .upload(coverPath, song.coverFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (coverError) {
+          throw coverError;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("song-covers").getPublicUrl(coverPath);
+
+        coverUrl = publicUrl;
+      }
+
       const { data, error } = await supabase
-        .from('songs')
+        .from("songs")
         .insert([
           {
+            user_id: user.id,
             title: song.name,
-            artist: song.artist,
-            cover_url: song.coverUrl,
-            audio_url: '',
+            artist: song.artist || "You",
+            cover_url: coverUrl,
+            audio_url: audioUrl,
             duration: 0,
-            genre: '',
+            genre: song.genre,
             total_plays: 0,
             total_likes: 0,
           },
@@ -187,7 +278,9 @@ const Dashboard = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       const newSong: UploadedSong = {
         id: data.id,
@@ -199,19 +292,21 @@ const Dashboard = () => {
       };
 
       setUploadedSongs([newSong, ...uploadedSongs]);
-      loadDashboardData();
-    } catch (error) {
-      console.error('Error uploading song:', error);
+      if (user) {
+        loadDashboardData(user.id);
+      }
 
-      const newSong: UploadedSong = {
-        id: Date.now().toString(),
-        name: song.name,
-        artist: song.artist,
-        coverUrl: song.coverUrl,
-        plays: 0,
-        uploadedAt: new Date().toISOString().split("T")[0],
-      };
-      setUploadedSongs([newSong, ...uploadedSongs]);
+      toast({
+        title: "Song uploaded",
+        description: "Your track is now available in your catalog.",
+      });
+    } catch (error) {
+      console.error("Error uploading song:", error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Unable to upload song. Please try again.",
+      });
     }
   };
 
@@ -230,7 +325,7 @@ const Dashboard = () => {
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <Music2 className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg">Melodify</span>
+              <span className="font-bold text-lg">Guruplay</span>
             </Link>
 
             <div className="flex items-center gap-4">
@@ -277,14 +372,22 @@ const Dashboard = () => {
                 title="Total Plays"
                 value={metrics.totalPlays.toLocaleString()}
                 icon={TrendingUp}
-                trend={{ value: metrics.playsTrend, isPositive: true }}
+                trend={
+                  metrics.totalPlays > 0 && metrics.playsTrend !== 0
+                    ? { value: Number(metrics.playsTrend.toFixed(1)), isPositive: metrics.playsTrend >= 0 }
+                    : undefined
+                }
                 iconColor="text-primary"
               />
               <MetricCard
                 title="Total Listeners"
                 value={metrics.totalListeners.toLocaleString()}
                 icon={Users}
-                trend={{ value: metrics.listenersTrend, isPositive: true }}
+                trend={
+                  metrics.totalListeners > 0 && metrics.listenersTrend !== 0
+                    ? { value: Number(metrics.listenersTrend.toFixed(1)), isPositive: metrics.listenersTrend >= 0 }
+                    : undefined
+                }
                 iconColor="text-blue-500"
               />
               <MetricCard
@@ -332,16 +435,14 @@ const Dashboard = () => {
               />
               <MetricCard
                 title="Profile Views"
-                value="2.4K"
+                value="—"
                 icon={Eye}
-                trend={{ value: 15.2, isPositive: true }}
                 iconColor="text-green-500"
               />
               <MetricCard
                 title="Engagement Rate"
-                value="68%"
+                value="—"
                 icon={TrendingUp}
-                trend={{ value: 4.1, isPositive: true }}
                 iconColor="text-orange-500"
               />
             </div>

@@ -4,15 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Music2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
     displayName: "",
   });
+  const [isArtist, setIsArtist] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,14 +26,36 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords do not match",
+        description: "Make sure both password fields are the same.",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    // TODO: Connect to your backend API
-    // Simulating registration for now
-    setTimeout(() => {
+    try {
+      await signUp(formData.email, formData.password, formData.displayName, isArtist);
+      toast({
+        title: "Account created",
+        description: isArtist
+          ? "Check your email and then complete your Guruplay artist profile."
+          : "Check your email to verify your Guruplay account.",
+      });
+      navigate("/login");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "Please review your details and try again.",
+      });
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1000);
+    }
   };
 
   return (
@@ -38,7 +65,7 @@ const Register = () => {
           <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
             <Music2 className="w-6 h-6 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground text-center">Sign up for Melodify</h1>
+          <h1 className="text-3xl font-bold text-foreground text-center">Sign up for Guruplay</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -98,6 +125,24 @@ const Register = () => {
             />
           </div>
 
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2">
+              <input
+                id="isArtist"
+                type="checkbox"
+                checked={isArtist}
+                onChange={(e) => setIsArtist(e.target.checked)}
+                className="h-4 w-4 rounded border-border bg-[#121212]"
+              />
+              <Label htmlFor="isArtist" className="text-sm">
+                Sign up as an artist
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Artists get access to uploads and analytics.
+            </p>
+          </div>
+
           <Button
             type="submit"
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-full"
@@ -111,7 +156,7 @@ const Register = () => {
           <p className="text-muted-foreground">
             Already have an account?{" "}
             <Link to="/login" className="text-foreground hover:text-primary font-semibold underline">
-              Log in here
+              Log in to Guruplay
             </Link>
           </p>
         </div>

@@ -9,7 +9,7 @@ import { Upload, Image, Music, X } from "lucide-react";
 interface UploadSongModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (song: { name: string; artist: string; coverUrl: string }) => void;
+  onUpload: (song: { name: string; artist: string; album: string; genre: string; description: string; coverFile: File | null; audioFile: File }) => Promise<void>;
 }
 
 const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) => {
@@ -21,6 +21,7 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
     description: "",
   });
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -34,6 +35,7 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setCoverFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setCoverPreview(reader.result as string);
@@ -51,29 +53,36 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!audioFile) {
+      return;
+    }
+
     setIsUploading(true);
 
-    // TODO: Connect to your backend API for actual upload
-    // Simulating upload for now
-    setTimeout(() => {
-      onUpload({
+    try {
+      await onUpload({
         name: formData.name,
-        artist: formData.artist || "You",
-        coverUrl: coverPreview || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
+        artist: formData.artist,
+        album: formData.album,
+        genre: formData.genre,
+        description: formData.description,
+        coverFile,
+        audioFile,
       });
-      
-      // Reset form
       setFormData({ name: "", artist: "", album: "", genre: "", description: "" });
       setCoverPreview(null);
+      setCoverFile(null);
       setAudioFile(null);
-      setIsUploading(false);
       onClose();
-    }, 1500);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const resetForm = () => {
     setFormData({ name: "", artist: "", album: "", genre: "", description: "" });
     setCoverPreview(null);
+    setCoverFile(null);
     setAudioFile(null);
   };
 
@@ -85,7 +94,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Cover Photo Upload */}
           <div className="space-y-2">
             <Label>Cover Photo</Label>
             <div
@@ -119,7 +127,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             />
           </div>
 
-          {/* Audio File Upload */}
           <div className="space-y-2">
             <Label>Audio File</Label>
             <div
@@ -161,7 +168,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             />
           </div>
 
-          {/* Song Details */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 col-span-2">
               <Label htmlFor="name">Song Name *</Label>
@@ -226,7 +232,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
@@ -239,7 +244,7 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             <Button
               type="submit"
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!formData.name || isUploading}
+              disabled={!formData.name || !audioFile || isUploading}
             >
               {isUploading ? "Uploading..." : "Upload Song"}
             </Button>

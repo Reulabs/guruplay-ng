@@ -1,4 +1,4 @@
-import { Home, Search, Library, Plus, Heart } from 'lucide-react';
+import { Home, Search, Library, Plus, Heart, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { playlists } from '@/data/mockData';
@@ -7,6 +7,7 @@ const Sidebar = () => {
   const mainNav = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Search', path: '/search' },
+    { icon: User, label: 'Artist', path: '/artist' },
   ];
 
   return (
