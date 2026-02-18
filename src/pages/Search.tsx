@@ -8,6 +8,7 @@ import ArtistCard from '@/components/cards/ArtistCard';
 
 const Search = () => {
   const [query, setQuery] = useState('');
+  const hasMusicOnPlatform = tracks.length > 0 || artists.length > 0 || playlists.length > 0;
 
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
@@ -28,7 +29,10 @@ const Search = () => {
     <div className="p-6 pb-40">
       {/* Search Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Search</h1>
+        <h1 className="text-3xl font-bold">Guruplay</h1>
+        <p className="text-muted-foreground mt-1 mb-4">
+          Search songs, artists, and playlists across the Guruplay platform.
+        </p>
         <div className="relative max-w-md">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -93,9 +97,19 @@ const Search = () => {
       ) : (
         /* Browse Categories */
         <div className="space-y-8">
+          {!hasMusicOnPlatform && (
+            <div className="rounded-xl border border-border bg-card p-6 text-center">
+              <h2 className="text-xl font-semibold">Guruplay</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                There is no music on the platform yet. New songs and artists will appear here soon.
+              </p>
+            </div>
+          )}
+
           {/* Genres */}
           <section>
-            <h2 className="text-xl font-bold mb-4">Browse Genres</h2>
+            <h2 className="text-xl font-bold mb-1">Guruplay</h2>
+            <p className="text-sm text-muted-foreground mb-4">Browse genres and find the sounds that match your vibe.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {genres.map((genre) => (
                 <div
@@ -110,7 +124,8 @@ const Search = () => {
 
           {/* Moods */}
           <section>
-            <h2 className="text-xl font-bold mb-4">Browse by Mood</h2>
+            <h2 className="text-xl font-bold mb-1">Guruplay</h2>
+            <p className="text-sm text-muted-foreground mb-4">Browse by mood and jump into playlists that fit your moment.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               {moods.map((mood) => (
                 <div

@@ -3,10 +3,11 @@ import { useRef } from 'react';
 
 interface HorizontalScrollProps {
   title: string;
+  description?: string;
   children: React.ReactNode;
 }
 
-const HorizontalScroll = ({ title, children }: HorizontalScrollProps) => {
+const HorizontalScroll = ({ title, description, children }: HorizontalScrollProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -22,7 +23,10 @@ const HorizontalScroll = ({ title, children }: HorizontalScrollProps) => {
   return (
     <section className="mb-10">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold hover:underline cursor-pointer">{title}</h2>
+        <div>
+          <h2 className="text-xl font-bold">Guruplay</h2>
+          <p className="text-sm text-muted-foreground">{description || title}</p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}

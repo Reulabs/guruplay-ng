@@ -327,14 +327,11 @@ const ArtistProfile = () => {
           </Avatar>
           <div className="flex-1 text-white">
             <p className="text-xs uppercase tracking-[0.18em] mb-1">Artist profile</p>
-            <h1 className="text-3xl sm:text-4xl font-bold">
-              {profileLoading ? "Loading artist..." : profile?.stage_name || "Guruplay Artist"}
-            </h1>
-            {profile?.primary_genre && (
-              <p className="text-sm text-white/80 mt-1">
-                {profile.primary_genre} • {songs.length} tracks
-              </p>
-            )}
+            <h1 className="text-3xl sm:text-4xl font-bold">Guruplay</h1>
+            <p className="text-sm text-white/80 mt-1">
+              {profileLoading ? "Loading artist profile..." : `${profile?.stage_name || "Guruplay Artist"} • ${songs.length} tracks`}
+            </p>
+            {profile?.primary_genre && <p className="text-xs text-white/70 mt-1">{profile.primary_genre}</p>}
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -352,7 +349,7 @@ const ArtistProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 bg-card border-border">
           <CardHeader>
-            <CardTitle>Artist details</CardTitle>
+            <CardTitle>Guruplay</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -438,7 +435,7 @@ const ArtistProfile = () => {
 
       <Card className="bg-card border-border">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Your catalog</CardTitle>
+            <CardTitle>Guruplay</CardTitle>
           <Button
             variant="outline"
             className="rounded-full"
@@ -458,7 +455,7 @@ const ArtistProfile = () => {
               <Music className="w-10 h-10 mb-1" />
               <p className="font-medium text-foreground">No songs uploaded yet</p>
               <p className="text-xs text-muted-foreground max-w-md">
-                This is where your releases live. Upload high quality audio and artwork to start building your Guruplay catalog.
+                No music has been uploaded yet. Upload high quality audio and artwork to start building your Guruplay catalog.
               </p>
               <Button
                 className="mt-2 rounded-full"

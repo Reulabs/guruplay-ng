@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PlayerProvider } from "@/context/PlayerContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import MainLayout from "@/components/layout/MainLayout";
+import NetworkStatus from "@/components/layout/NetworkStatus";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
@@ -46,6 +47,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <NetworkStatus />
             <Routes>
               <Route
                 element={

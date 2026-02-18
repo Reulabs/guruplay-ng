@@ -11,6 +11,7 @@ type FilterType = 'all' | 'playlists' | 'albums' | 'artists';
 const Library = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [filter, setFilter] = useState<FilterType>('all');
+  const hasMusicOnPlatform = tracks.length > 0 || playlists.length > 0;
 
   const filters: { value: FilterType; label: string }[] = [
     { value: 'all', label: 'All' },
@@ -26,7 +27,10 @@ const Library = () => {
     <div className="p-6 pb-40">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Your Library</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Guruplay</h1>
+          <p className="text-muted-foreground mt-1">Your personal space for saved songs, playlists, and listening history.</p>
+        </div>
         <div className="flex items-center gap-2">
           <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
             <Plus className="h-5 w-5" />
@@ -82,7 +86,14 @@ const Library = () => {
       </section>
 
       {/* Library Content */}
-      {viewMode === 'grid' ? (
+      {!hasMusicOnPlatform ? (
+        <div className="rounded-xl border border-border bg-card p-6 text-center">
+          <h2 className="text-xl font-semibold">Guruplay</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            No music is available on the platform yet. Once tracks are uploaded, your library will populate here.
+          </p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {playlists.map((playlist) => (
             <PlaylistCard key={playlist.id} playlist={playlist} />
