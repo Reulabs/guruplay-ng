@@ -348,8 +348,8 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Analytics Dashboard</h1>
-            <p className="text-muted-foreground">Track your music performance and audience engagement</p>
+            <h1 className="text-3xl font-bold mb-1">Guruplay</h1>
+            <p className="text-muted-foreground">Track performance, audience activity, and growth across your music catalog.</p>
           </div>
           <Button
             onClick={() => setIsUploadOpen(true)}
@@ -450,7 +450,7 @@ const Dashboard = () => {
 
           <TabsContent value="songs" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Your Songs</h2>
+              <h2 className="text-2xl font-bold">Guruplay</h2>
               <p className="text-muted-foreground">{uploadedSongs.length} tracks</p>
             </div>
 
