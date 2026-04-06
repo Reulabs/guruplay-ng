@@ -21,7 +21,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -32,7 +32,6 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   }
 
   if (!user) {
-    signOut().catch(() => undefined);
     return <Navigate to="/login" replace />;
   }
 
@@ -49,18 +48,19 @@ const App = () => (
           <BrowserRouter>
             <NetworkStatus />
             <Routes>
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <MainLayout />
-                  </ProtectedRoute>
-                }
-              >
+              <Route element={<MainLayout />}> 
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/playlist/:id" element={<PlaylistDetail />} />
-                <Route path="/artist" element={<ArtistProfile />} />
+                <Route
+                  path="/artist"
+                  element={
+                    <ProtectedRoute>
+                      <ArtistProfile />
+                    </ProtectedRoute>
+                  }
+                />
               </Route>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
