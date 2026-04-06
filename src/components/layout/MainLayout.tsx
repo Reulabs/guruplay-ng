@@ -5,19 +5,14 @@ import PlayerBar from '@/components/player/PlayerBar';
 
 const MainLayout = () => {
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar - Desktop only */}
+    <div className="flex min-h-screen bg-[#04050b] text-foreground overflow-hidden">
       <Sidebar />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto scrollbar-thin rounded-lg bg-gradient-to-b from-zinc-800/50 to-background m-2 mb-0 md:mr-2 md:ml-0">
+      <main className="flex-1 overflow-y-auto scrollbar-thin rounded-[32px] bg-[#090b13] m-4 shadow-2xl shadow-black/30 border border-white/10">
         <Outlet />
       </main>
 
-      {/* Mobile Navigation */}
       <MobileNav />
-
-      {/* Player Bar */}
       <PlayerBar />
     </div>
   );

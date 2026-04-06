@@ -1,114 +1,200 @@
-import { Play } from 'lucide-react';
-import { playlists, tracks, artists } from '@/data/mockData';
+import { useMemo } from 'react';
+import { Bell, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import PlaylistCard from '@/components/cards/PlaylistCard';
-import ArtistCard from '@/components/cards/ArtistCard';
-import TrackCard from '@/components/cards/TrackCard';
 import HorizontalScroll from '@/components/sections/HorizontalScroll';
 import { usePlayer } from '@/context/PlayerContext';
 
+const fallbackTrending = [
+  {
+    id: 'trending-1',
+    title: 'One More Stranger',
+    description: 'Anna Ellison, Claire Hudson',
+    image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'trending-2',
+    title: 'Cloud Nine',
+    description: 'Anna Ellison, Claire Hudson',
+    image: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'trending-3',
+    title: 'Desired Games',
+    description: 'Anna Ellison, Claire Hudson',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'trending-4',
+    title: 'Bloodlust 2',
+    description: 'Anna Ellison, Claire Hudson',
+    image: 'https://images.unsplash.com/photo-1504898770365-14faca6a7320?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'trending-5',
+    title: 'Until I Met You 2',
+    description: 'Anna Ellison, Claire Hudson',
+    image: 'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=520&h=520&fit=crop',
+  },
+];
+
+const fallbackRecommended = [
+  {
+    id: 'rec-1',
+    name: 'Nova Pulse',
+    imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'rec-2',
+    name: 'Midnight Echo',
+    imageUrl: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'rec-3',
+    name: 'Luna Vibe',
+    imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'rec-4',
+    name: 'Aura Rhythm',
+    imageUrl: 'https://images.unsplash.com/photo-1504898770365-14faca6a7320?w=520&h=520&fit=crop',
+  },
+  {
+    id: 'rec-5',
+    name: 'Neon Dream',
+    imageUrl: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=520&h=520&fit=crop',
+  },
+];
+
 const Home = () => {
   const { playPlaylist } = usePlayer();
-  const hasMusicOnPlatform = tracks.length > 0 || playlists.length > 0 || artists.length > 0;
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
-  const quickPicks = playlists.slice(0, 6);
+  const trendingArtists = useMemo(() => fallbackTrending, []);
 
   return (
-    <div className="p-6 pb-32">
-      {/* Header */}
-      <h1 className="text-3xl font-bold">Guruplay</h1>
-      <p className="text-muted-foreground mt-1 mb-6">
-        {getGreeting()}. Discover fresh sounds, follow artists, and keep your listening journey in one place.
-      </p>
-
-      {!hasMusicOnPlatform && (
-        <section className="mb-10 rounded-xl border border-border bg-card p-6 text-center">
-          <h2 className="text-xl font-semibold">Guruplay</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            No music is available on the platform yet. Check back soon, your next favorite track is on the way.
+    <div className="p-6 pb-40">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-2xl">
+          <h1 className="text-4xl font-semibold tracking-tight">Discover the sounds that move you.</h1>
+          <p className="mt-3 text-sm text-muted-foreground max-w-xl">
+            Explore playlists, artists, albums, and mood-driven music in a sleek listening experience.
           </p>
-        </section>
-      )}
+        </div>
 
-      {/* Quick Picks Grid */}
-      {quickPicks.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
-          {quickPicks.map((playlist) => (
-            <button
-              key={playlist.id}
-              onClick={() => playPlaylist(playlist.tracks)}
-              className="group flex items-center gap-4 bg-secondary/60 hover:bg-secondary rounded-md overflow-hidden transition-colors text-left h-14"
-            >
-              <img
-                src={playlist.coverUrl}
-                alt={playlist.name}
-                className="h-14 w-14 object-cover"
-              />
-              <span className="flex-1 font-semibold text-sm truncate pr-2">{playlist.name}</span>
-              <div className="pr-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="p-2.5 rounded-full bg-primary text-primary-foreground shadow-lg">
-                  <Play className="h-4 w-4 fill-current" />
-                </div>
-              </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-[420px]">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search for Song, Artists, Playlists and More..."
+              className="pl-12 pr-4 h-12 rounded-full bg-[#07090f] border border-white/10 text-foreground"
+            />
+          </div>
+          <button className="flex items-center gap-3 rounded-full bg-[#090b13] border border-white/10 px-4 py-3 text-sm text-foreground hover:bg-white/5 transition-colors">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-violet-500 to-blue-500 text-sm font-semibold text-white">D</span>
+            <span className="hidden sm:block text-left">
+              <span className="block text-xs text-muted-foreground">Hello,</span>
+              <span className="block font-semibold">David</span>
+            </span>
+            <Bell className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+
+      <section className="mt-10">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold">Trending Artists</h2>
+            <p className="text-sm text-muted-foreground">The artists people are listening to right now.</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <button className="rounded-full border border-white/10 bg-[#090b13] p-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+              <ChevronLeft className="h-4 w-4" />
             </button>
+            <button className="rounded-full border border-white/10 bg-[#090b13] p-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          {trendingArtists.map((artist) => (
+            <div key={artist.id} className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#05070f] shadow-[0_35px_120px_-60px_rgba(0,0,0,0.6)]">
+              <img
+                src={artist.image}
+                alt={artist.title}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+              <div className="relative p-6 h-full flex flex-col justify-end gap-3">
+                <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Trending</span>
+                <h3 className="text-lg font-semibold text-white">{artist.title}</h3>
+                <p className="text-sm text-muted-foreground">{artist.description}</p>
+              </div>
+            </div>
           ))}
         </div>
-      )}
+      </section>
 
-      {/* Made for You */}
-      <HorizontalScroll
-        title="Made for You"
-        description="Personalized playlists built for your taste on Guruplay."
-      >
-        {playlists.map((playlist) => (
-          <div key={playlist.id} className="min-w-[180px] max-w-[180px]">
-            <PlaylistCard playlist={playlist} />
+      <section className="mt-10">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold">Recommended Artists</h2>
+            <p className="text-sm text-muted-foreground">Fresh picks just for your next listening session.</p>
           </div>
-        ))}
-      </HorizontalScroll>
+          <div className="hidden sm:flex items-center gap-2">
+            <button className="rounded-full border border-white/10 bg-[#090b13] p-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button className="rounded-full border border-white/10 bg-[#090b13] p-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
 
-      {/* Recently Played */}
-      {tracks.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-xl font-bold mb-1">Guruplay</h2>
-          <p className="text-sm text-muted-foreground mb-4">Recently played tracks picked from your listening history.</p>
-          <div className="bg-card/50 rounded-lg">
-            {tracks.slice(0, 5).map((track, index) => (
-              <TrackCard key={track.id} track={track} index={index + 1} showIndex />
-            ))}
-          </div>
-        </section>
-      )}
+        <HorizontalScroll title="" description="">
+          {fallbackRecommended.map((artist) => (
+            <div key={artist.id} className="min-w-[180px] max-w-[180px]">
+              <div className="group rounded-3xl overflow-hidden bg-[#090b13] border border-white/10 shadow-lg shadow-black/20">
+                <img src={artist.imageUrl} alt={artist.name} className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="p-4">
+                  <p className="text-sm font-semibold text-white">{artist.name}</p>
+                  <p className="text-xs text-muted-foreground">Popular artist</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </HorizontalScroll>
+      </section>
 
-      {/* Popular Artists */}
-      <HorizontalScroll
-        title="Popular Artists"
-        description="Trending artists listeners are playing most right now."
-      >
-        {artists.map((artist) => (
-          <div key={artist.id} className="min-w-[180px] max-w-[180px]">
-            <ArtistCard artist={artist} />
+      <section className="mt-10">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold">Made for You</h2>
+            <p className="text-sm text-muted-foreground">Handpicked playlists to keep your queue moving.</p>
           </div>
-        ))}
-      </HorizontalScroll>
+          <button
+            onClick={() => playPlaylist([])}
+            className="rounded-full bg-white/10 px-4 py-2 text-sm text-foreground hover:bg-white/15 transition-colors"
+          >
+            Play all
+          </button>
+        </div>
 
-      {/* New Releases */}
-      <HorizontalScroll
-        title="New Releases"
-        description="Fresh drops and latest releases added to Guruplay."
-      >
-        {playlists.slice().reverse().map((playlist) => (
-          <div key={playlist.id} className="min-w-[180px] max-w-[180px]">
-            <PlaylistCard playlist={playlist} />
-          </div>
-        ))}
-      </HorizontalScroll>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <PlaylistCard
+              key={`hero-playlist-${index}`}
+              playlist={{
+                id: `hero-${index}`,
+                name: `Mix ${index + 1}`,
+                description: 'A set of fresh beats and charts you love.',
+                coverUrl: `https://images.unsplash.com/photo-15${index * 10}?w=520&h=520&fit=crop`,
+                tracks: [],
+                createdBy: 'Miraculous'
+              }}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 };
