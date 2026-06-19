@@ -48,6 +48,19 @@ const getAuthUser = (user: User): AuthUser => {
   };
 };
 
+const ensureUserRecord = async (user: User) => {
+  const metadata = user.user_metadata || {};
+
+  await supabase
+    .from('users')
+    .upsert({
+      id: user.id,
+      email: user.email || '',
+      display_name: metadata.display_name || metadata.displayName || user.email || 'Guruplay user',
+      last_login: new Date().toISOString(),
+    });
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -60,12 +73,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session?.user) {
+        await ensureUserRecord(data.session.user);
+      }
       setUser(data.session?.user ? getAuthUser(data.session.user) : null);
       setIsAuthLoading(false);
     });
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setTimeout(() => {
+          ensureUserRecord(session.user);
+        }, 0);
+      }
       setUser(session?.user ? getAuthUser(session.user) : null);
       setIsAuthLoading(false);
     });
@@ -80,7 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw getAppError(error);
-    if (data.user) setUser(getAuthUser(data.user));
+    if (data.user) {
+      await ensureUserRecord(data.user);
+      setUser(getAuthUser(data.user));
+    }
     setIsAuthDialogOpen(false);
   }, []);
 
@@ -102,7 +126,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) throw getAppError(error);
-    if (data.user) setUser(getAuthUser(data.user));
+    if (data.user) {
+      await ensureUserRecord(data.user);
+      setUser(getAuthUser(data.user));
+    }
     setIsAuthDialogOpen(false);
   }, []);
 

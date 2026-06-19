@@ -9,10 +9,19 @@ import { Upload, Image, Music, X } from "lucide-react";
 interface UploadSongModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (song: { name: string; artist: string; coverUrl: string }) => void;
+  artistName: string;
+  onUpload: (song: {
+    name: string;
+    artist: string;
+    album: string;
+    genre: string;
+    description: string;
+    coverUrl: string;
+    audioFile: File | null;
+  }) => Promise<void>;
 }
 
-const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) => {
+const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     artist: "",
@@ -23,6 +32,7 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
@@ -52,29 +62,34 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
+    setError(null);
 
-    // TODO: Connect to your backend API for actual upload
-    // Simulating upload for now
-    setTimeout(() => {
-      onUpload({
+    try {
+      await onUpload({
         name: formData.name,
-        artist: formData.artist || "You",
-        coverUrl: coverPreview || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
+        artist: formData.artist || artistName,
+        album: formData.album,
+        genre: formData.genre,
+        description: formData.description,
+        coverUrl: coverPreview || "",
+        audioFile,
       });
-      
-      // Reset form
       setFormData({ name: "", artist: "", album: "", genre: "", description: "" });
       setCoverPreview(null);
       setAudioFile(null);
-      setIsUploading(false);
       onClose();
-    }, 1500);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Unable to upload song.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const resetForm = () => {
     setFormData({ name: "", artist: "", album: "", genre: "", description: "" });
     setCoverPreview(null);
     setAudioFile(null);
+    setError(null);
   };
 
   return (
@@ -85,7 +100,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Cover Photo Upload */}
           <div className="space-y-2">
             <Label>Cover Photo</Label>
             <div
@@ -119,7 +133,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             />
           </div>
 
-          {/* Audio File Upload */}
           <div className="space-y-2">
             <Label>Audio File</Label>
             <div
@@ -161,7 +174,6 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             />
           </div>
 
-          {/* Song Details */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 col-span-2">
               <Label htmlFor="name">Song Name *</Label>
@@ -183,7 +195,7 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
                 name="artist"
                 value={formData.artist}
                 onChange={handleChange}
-                placeholder="Your name"
+                placeholder={artistName}
                 className="bg-muted/30 border-border"
               />
             </div>
@@ -226,7 +238,12 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             </div>
           </div>
 
-          {/* Actions */}
+          {error && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
@@ -239,7 +256,7 @@ const UploadSongModal = ({ isOpen, onClose, onUpload }: UploadSongModalProps) =>
             <Button
               type="submit"
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!formData.name || isUploading}
+              disabled={!formData.name || !audioFile || isUploading}
             >
               {isUploading ? "Uploading..." : "Upload Song"}
             </Button>
