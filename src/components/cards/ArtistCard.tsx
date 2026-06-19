@@ -1,7 +1,7 @@
-import { Play } from 'lucide-react';
-import { Artist, tracks } from '@/data/mockData';
-import { usePlayer } from '@/context/PlayerContext';
-import { useNavigate } from 'react-router-dom';
+import { Play } from "lucide-react";
+import { Artist, tracks } from "@/data/mockData";
+import { usePlayer } from "@/context/PlayerContext";
+import { useNavigate } from "react-router-dom";
 
 interface ArtistCardProps {
   artist: Artist;
@@ -11,7 +11,7 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
   const { playPlaylist } = usePlayer();
   const navigate = useNavigate();
 
-  const artistTracks = tracks.filter(t => t.artist === artist.name);
+  const artistTracks = tracks.filter((t) => t.artist === artist.name);
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();

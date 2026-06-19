@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Disc3 } from 'lucide-react';
-import { albums, artists, tracks } from '@/data/mockData';
-import { usePlayer } from '@/context/PlayerContext';
-import ArtistHero from '@/components/artist/ArtistHero';
-import ArtistTrackTable from '@/components/artist/ArtistTrackTable';
-import Typography from '@/components/ui/typography';
+import { useMemo } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Disc3 } from "lucide-react";
+import { albums, artists, tracks } from "@/data/mockData";
+import { usePlayer } from "@/context/PlayerContext";
+import ArtistHero from "@/components/artist/ArtistHero";
+import ArtistTrackTable from "@/components/artist/ArtistTrackTable";
+import Typography from "@/components/ui/typography";
 
 const ArtistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,12 +14,12 @@ const ArtistDetail = () => {
 
   const artistTracks = useMemo(
     () => tracks.filter((track) => track.artist === artist?.name),
-    [artist?.name]
+    [artist?.name],
   );
 
   const artistAlbums = useMemo(
     () => albums.filter((album) => album.artist === artist?.name),
-    [artist?.name]
+    [artist?.name],
   );
 
   if (!artist) {
@@ -29,7 +29,10 @@ const ArtistDetail = () => {
           <Typography as="h1" variant="h2" weight="bold">
             Artist not found
           </Typography>
-          <Link to="/artist" className="mt-4 inline-block text-sm font-bold text-primary hover:underline">
+          <Link
+            to="/artist"
+            className="mt-4 inline-block text-sm font-bold text-primary hover:underline"
+          >
             Back to artists
           </Link>
         </div>
@@ -39,7 +42,10 @@ const ArtistDetail = () => {
 
   return (
     <div className="space-y-8 p-4 pb-28 md:p-8">
-      <Link to="/artist" className="inline-flex items-center gap-2 text-sm font-bold text-white/55 hover:text-white">
+      <Link
+        to="/artist"
+        className="inline-flex items-center gap-2 text-sm font-bold text-white/55 hover:text-white"
+      >
         <ArrowLeft className="h-4 w-4" />
         Artists
       </Link>
@@ -52,7 +58,10 @@ const ArtistDetail = () => {
         onShuffle={() => playPlaylist(artistTracks)}
       />
 
-      <ArtistTrackTable tracks={artistTracks} onPlayTrack={(track) => playPlaylist([track])} />
+      <ArtistTrackTable
+        tracks={artistTracks}
+        onPlayTrack={(track) => playPlaylist([track])}
+      />
 
       <section>
         <Typography as="h2" variant="h2" weight="bold" className="mb-4">
@@ -71,10 +80,18 @@ const ArtistDetail = () => {
                   alt={album.name}
                   className="aspect-square w-full rounded-2xl object-cover transition-transform group-hover:scale-[1.02]"
                 />
-                <Typography variant="body" weight="bold" className="mt-3" truncate>
+                <Typography
+                  variant="body"
+                  weight="bold"
+                  className="mt-3"
+                  truncate
+                >
                   {album.name}
                 </Typography>
-                <Typography variant="caption" className="mt-1 flex items-center gap-1 text-white/45">
+                <Typography
+                  variant="caption"
+                  className="mt-1 flex items-center gap-1 text-white/45"
+                >
                   <Disc3 className="h-3.5 w-3.5" />
                   {album.year}
                 </Typography>

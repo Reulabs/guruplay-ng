@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { Grid, List, Plus } from 'lucide-react';
-import { playlists, tracks } from '@/data/mockData';
-import PlaylistCard from '@/components/cards/PlaylistCard';
-import TrackCard from '@/components/cards/TrackCard';
-import { cn } from '@/lib/utils';
-import Typography from '@/components/ui/typography';
+import { useState } from "react";
+import { Grid, List, Plus } from "lucide-react";
+import { playlists, tracks } from "@/data/mockData";
+import PlaylistCard from "@/components/cards/PlaylistCard";
+import TrackCard from "@/components/cards/TrackCard";
+import { cn } from "@/lib/utils";
+import Typography from "@/components/ui/typography";
 
-type ViewMode = 'grid' | 'list';
-type FilterType = 'all' | 'playlists' | 'albums' | 'artists';
+type ViewMode = "grid" | "list";
+type FilterType = "all" | "playlists" | "albums" | "artists";
 
 const Library = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [filter, setFilter] = useState<FilterType>("all");
 
   const filters: { value: FilterType; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'playlists', label: 'Playlists' },
-    { value: 'albums', label: 'Albums' },
-    { value: 'artists', label: 'Artists' },
+    { value: "all", label: "All" },
+    { value: "playlists", label: "Playlists" },
+    { value: "albums", label: "Albums" },
+    { value: "artists", label: "Artists" },
   ];
 
   // Mock liked songs
@@ -27,25 +27,31 @@ const Library = () => {
     <div className="p-6 pb-40">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <Typography as="h1" variant="h1" weight="bold">Your Library</Typography>
+        <Typography as="h1" variant="h1" weight="bold">
+          Your Library
+        </Typography>
         <div className="flex items-center gap-2">
           <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
             <Plus className="h-5 w-5" />
           </button>
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode("list")}
             className={cn(
-              'p-2 transition-colors',
-              viewMode === 'list' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              "p-2 transition-colors",
+              viewMode === "list"
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <List className="h-5 w-5" />
           </button>
           <button
-            onClick={() => setViewMode('grid')}
+            onClick={() => setViewMode("grid")}
             className={cn(
-              'p-2 transition-colors',
-              viewMode === 'grid' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              "p-2 transition-colors",
+              viewMode === "grid"
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Grid className="h-5 w-5" />
@@ -60,10 +66,10 @@ const Library = () => {
             key={f.value}
             onClick={() => setFilter(f.value)}
             className={cn(
-              'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors',
+              "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
               filter === f.value
-                ? 'bg-foreground text-background'
-                : 'bg-muted text-foreground hover:bg-muted/80'
+                ? "bg-foreground text-background"
+                : "bg-muted text-foreground hover:bg-muted/80",
             )}
           >
             {f.label}
@@ -76,14 +82,23 @@ const Library = () => {
         <div className="flex items-center gap-4 p-4 rounded-lg gradient-primary mb-4 cursor-pointer hover:opacity-90 transition-opacity">
           <div className="flex-1">
             <p className="text-sm text-primary-foreground/80">Playlist</p>
-            <Typography as="h2" variant="h2" weight="bold" className="text-primary-foreground">Liked Songs</Typography>
-            <p className="text-sm text-primary-foreground/80 mt-1">{likedSongs.length} songs</p>
+            <Typography
+              as="h2"
+              variant="h2"
+              weight="bold"
+              className="text-primary-foreground"
+            >
+              Liked Songs
+            </Typography>
+            <p className="text-sm text-primary-foreground/80 mt-1">
+              {likedSongs.length} songs
+            </p>
           </div>
         </div>
       </section>
 
       {/* Library Content */}
-      {viewMode === 'grid' ? (
+      {viewMode === "grid" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {playlists.map((playlist) => (
             <PlaylistCard key={playlist.id} playlist={playlist} />

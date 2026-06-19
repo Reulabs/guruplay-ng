@@ -1,14 +1,14 @@
-import { useState, useMemo } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { tracks, artists, playlists, genres, moods } from '@/data/mockData';
-import TrackCard from '@/components/cards/TrackCard';
-import PlaylistCard from '@/components/cards/PlaylistCard';
-import ArtistCard from '@/components/cards/ArtistCard';
-import Typography from '@/components/ui/typography';
+import { useState, useMemo } from "react";
+import { Search as SearchIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { tracks, artists, playlists, genres, moods } from "@/data/mockData";
+import TrackCard from "@/components/cards/TrackCard";
+import PlaylistCard from "@/components/cards/PlaylistCard";
+import ArtistCard from "@/components/cards/ArtistCard";
+import Typography from "@/components/ui/typography";
 
 const Search = () => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
@@ -16,11 +16,15 @@ const Search = () => {
     const q = query.toLowerCase();
     return {
       tracks: tracks.filter(
-        t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.artist.toLowerCase().includes(q),
       ),
-      artists: artists.filter(a => a.name.toLowerCase().includes(q)),
+      artists: artists.filter((a) => a.name.toLowerCase().includes(q)),
       playlists: playlists.filter(
-        p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q),
       ),
     };
   }, [query]);
@@ -29,7 +33,9 @@ const Search = () => {
     <div className="p-6 pb-40">
       {/* Search Header */}
       <div className="mb-8">
-        <Typography as="h1" variant="h1" weight="bold" className="mb-4">Search</Typography>
+        <Typography as="h1" variant="h1" weight="bold" className="mb-4">
+          Search
+        </Typography>
         <div className="relative max-w-md">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -47,10 +53,17 @@ const Search = () => {
           {/* Tracks */}
           {searchResults.tracks.length > 0 && (
             <section>
-              <Typography as="h2" variant="h2" weight="bold" className="mb-4">Songs</Typography>
+              <Typography as="h2" variant="h2" weight="bold" className="mb-4">
+                Songs
+              </Typography>
               <div className="bg-card rounded-lg p-2">
                 {searchResults.tracks.slice(0, 5).map((track, index) => (
-                  <TrackCard key={track.id} track={track} index={index + 1} showIndex />
+                  <TrackCard
+                    key={track.id}
+                    track={track}
+                    index={index + 1}
+                    showIndex
+                  />
                 ))}
               </div>
             </section>
@@ -59,7 +72,9 @@ const Search = () => {
           {/* Artists */}
           {searchResults.artists.length > 0 && (
             <section>
-              <Typography as="h2" variant="h2" weight="bold" className="mb-4">Artists</Typography>
+              <Typography as="h2" variant="h2" weight="bold" className="mb-4">
+                Artists
+              </Typography>
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {searchResults.artists.map((artist) => (
                   <div key={artist.id} className="min-w-[160px] max-w-[160px]">
@@ -73,7 +88,9 @@ const Search = () => {
           {/* Playlists */}
           {searchResults.playlists.length > 0 && (
             <section>
-              <Typography as="h2" variant="h2" weight="bold" className="mb-4">Playlists</Typography>
+              <Typography as="h2" variant="h2" weight="bold" className="mb-4">
+                Playlists
+              </Typography>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {searchResults.playlists.map((playlist) => (
                   <PlaylistCard key={playlist.id} playlist={playlist} />
@@ -96,7 +113,9 @@ const Search = () => {
         <div className="space-y-8">
           {/* Genres */}
           <section>
-            <Typography as="h2" variant="h2" weight="bold" className="mb-4">Browse Genres</Typography>
+            <Typography as="h2" variant="h2" weight="bold" className="mb-4">
+              Browse Genres
+            </Typography>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {genres.map((genre) => (
                 <div
@@ -111,7 +130,9 @@ const Search = () => {
 
           {/* Moods */}
           <section>
-            <Typography as="h2" variant="h2" weight="bold" className="mb-4">Browse by Mood</Typography>
+            <Typography as="h2" variant="h2" weight="bold" className="mb-4">
+              Browse by Mood
+            </Typography>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               {moods.map((mood) => (
                 <div

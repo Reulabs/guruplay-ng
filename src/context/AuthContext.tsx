@@ -1,9 +1,16 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { AppError, AppErrorCode, getAppError } from '@/lib/errors';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { User } from "@supabase/supabase-js";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { AppError, AppErrorCode, getAppError } from "@/lib/errors";
 
-export type AuthMode = 'login' | 'signup';
+export type AuthMode = "login" | "signup";
 
 export interface AuthUser {
   id: string;
@@ -41,7 +48,7 @@ const getAuthUser = (user: User): AuthUser => {
 
   return {
     id: user.id,
-    email: user.email || '',
+    email: user.email || "",
     displayName: metadata.display_name || metadata.displayName,
     dateOfBirth: metadata.date_of_birth || metadata.dateOfBirth,
     gender: metadata.gender,
@@ -51,20 +58,24 @@ const getAuthUser = (user: User): AuthUser => {
 const ensureUserRecord = async (user: User) => {
   const metadata = user.user_metadata || {};
 
-  await supabase
-    .from('users')
-    .upsert({
-      id: user.id,
-      email: user.email || '',
-      display_name: metadata.display_name || metadata.displayName || user.email || 'Guruplay user',
-      last_login: new Date().toISOString(),
-    });
+  await supabase.from("users").upsert({
+    id: user.id,
+    email: user.email || "",
+    display_name:
+      metadata.display_name ||
+      metadata.displayName ||
+      user.email ||
+      "Guruplay user",
+    last_login: new Date().toISOString(),
+  });
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [authDialogMode, setAuthDialogMode] = useState<AuthMode>('login');
+  const [authDialogMode, setAuthDialogMode] = useState<AuthMode>("login");
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -99,7 +110,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new AppError(AppErrorCode.SupabaseNotConfigured);
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) throw getAppError(error);
     if (data.user) {
       await ensureUserRecord(data.user);
@@ -142,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   }, []);
 
-  const openAuthDialog = useCallback((mode: AuthMode = 'login') => {
+  const openAuthDialog = useCallback((mode: AuthMode = "login") => {
     setAuthDialogMode(mode);
     setIsAuthDialogOpen(true);
   }, []);
@@ -164,7 +178,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       openAuthDialog,
       closeAuthDialog,
     }),
-    [authDialogMode, closeAuthDialog, isAuthDialogOpen, isAuthLoading, login, logout, openAuthDialog, signup, user]
+    [
+      authDialogMode,
+      closeAuthDialog,
+      isAuthDialogOpen,
+      isAuthLoading,
+      login,
+      logout,
+      openAuthDialog,
+      signup,
+      user,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -173,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

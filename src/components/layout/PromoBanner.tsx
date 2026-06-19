@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import Typography from '@/components/ui/typography';
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import Typography from "@/components/ui/typography";
 
 const PromoBanner = () => {
   const { isAuthenticated, openAuthDialog } = useAuth();

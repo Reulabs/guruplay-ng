@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 export interface AppNotification {
   id: string;
@@ -22,9 +22,9 @@ interface NotificationRow {
 
 const getFallbackNotifications = (): AppNotification[] => [
   {
-    id: 'welcome',
-    title: 'Welcome to Guruplay',
-    body: 'New account updates and listening activity will appear here.',
+    id: "welcome",
+    title: "Welcome to Guruplay",
+    body: "New account updates and listening activity will appear here.",
     read: false,
     createdAt: new Date().toISOString(),
   },
@@ -32,8 +32,8 @@ const getFallbackNotifications = (): AppNotification[] => [
 
 const mapNotification = (row: NotificationRow): AppNotification => ({
   id: row.id,
-  title: row.title || 'Notification',
-  body: row.body || row.message || '',
+  title: row.title || "Notification",
+  body: row.body || row.message || "",
   read: Boolean(row.read),
   createdAt: row.created_at,
 });
@@ -53,7 +53,7 @@ export const useNotifications = () => {
 
     if (!isSupabaseConfigured) {
       setNotifications(getFallbackNotifications());
-      setError('Supabase is not configured.');
+      setError("Supabase is not configured.");
       return;
     }
 
@@ -61,10 +61,10 @@ export const useNotifications = () => {
     setError(null);
 
     const { data, error: queryError } = await supabase
-      .from('notifications')
-      .select('id,user_id,title,body,message,read,created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+      .from("notifications")
+      .select("id,user_id,title,body,message,read,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
       .limit(20);
 
     if (queryError) {
@@ -74,7 +74,9 @@ export const useNotifications = () => {
       return;
     }
 
-    setNotifications((data || []).map((row) => mapNotification(row as NotificationRow)));
+    setNotifications(
+      (data || []).map((row) => mapNotification(row as NotificationRow)),
+    );
     setIsLoading(false);
   }, [isAuthenticated, user]);
 
@@ -90,16 +92,16 @@ export const useNotifications = () => {
     const channel = supabase
       .channel(`notifications:${user.id}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
+          event: "*",
+          schema: "public",
+          table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
         () => {
           loadNotifications();
-        }
+        },
       )
       .subscribe();
 
@@ -111,20 +113,22 @@ export const useNotifications = () => {
   const markAllRead = useCallback(async () => {
     if (!user) return;
 
-    setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
+    setNotifications((current) =>
+      current.map((notification) => ({ ...notification, read: true })),
+    );
 
     if (!isSupabaseConfigured) return;
 
     await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ read: true })
-      .eq('user_id', user.id)
-      .eq('read', false);
+      .eq("user_id", user.id)
+      .eq("read", false);
   }, [user]);
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
-    [notifications]
+    [notifications],
   );
 
   return {

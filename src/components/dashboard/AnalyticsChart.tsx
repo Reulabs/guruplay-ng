@@ -1,5 +1,13 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AnalyticsChartProps {
   data: { date: string; plays: number; listeners: number }[];
@@ -21,16 +29,13 @@ const AnalyticsChart = ({ data, title }: AnalyticsChartProps) => {
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
             />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-            />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                color: 'hsl(var(--foreground))'
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+                color: "hsl(var(--foreground))",
               }}
             />
             <Line

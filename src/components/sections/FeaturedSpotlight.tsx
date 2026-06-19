@@ -1,15 +1,21 @@
-import { ArrowUp, BadgeCheck, ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { Track } from '@/data/mockData';
-import { Button } from '@/components/ui/button';
-import Typography from '@/components/ui/typography';
-import { usePlayer } from '@/context/PlayerContext';
-import { cn } from '@/lib/utils';
+import {
+  ArrowUp,
+  BadgeCheck,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+} from "lucide-react";
+import { Track } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
+import Typography from "@/components/ui/typography";
+import { usePlayer } from "@/context/PlayerContext";
+import { cn } from "@/lib/utils";
 
 interface FeaturedSpotlightProps {
   tracks: Track[];
 }
 
-const tabs = ['For you', 'Staff Picks', 'Uploads'];
+const tabs = ["For you", "Staff Picks", "Uploads"];
 
 const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
   const { playPlaylist } = usePlayer();
@@ -21,7 +27,12 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
         <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div className="max-w-sm">
             <div className="mb-4 flex items-center gap-3">
-              <Typography as="h1" variant="display" weight="black" className="text-white">
+              <Typography
+                as="h1"
+                variant="display"
+                weight="black"
+                className="text-white"
+              >
                 Spotlight
               </Typography>
               <span className="grid h-10 w-10 place-items-center rounded-xl border-[3px] border-white text-white">
@@ -34,10 +45,15 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
           </div>
 
           <div className="max-w-xl justify-self-end">
-            <Typography variant="title" weight="bold" className="leading-7 text-white">
-              Spotlight highlights exceptional uploads from independent artists, handpicked by our editorial team.
-              Featured songs are added to curated playlists and each eligible artist receives $1000 USD when a track is
-              selected.
+            <Typography
+              variant="title"
+              weight="bold"
+              className="leading-7 text-white"
+            >
+              Spotlight highlights exceptional uploads from independent artists,
+              handpicked by our editorial team. Featured songs are added to
+              curated playlists and each eligible artist receives $1000 USD when
+              a track is selected.
             </Typography>
             <Button
               onClick={() => playPlaylist(featuredTracks)}
@@ -61,8 +77,10 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
           <button
             key={tab}
             className={cn(
-              'rounded-full px-5 py-2.5 text-sm font-bold transition-colors',
-              index === 0 ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/15'
+              "rounded-full px-5 py-2.5 text-sm font-bold transition-colors",
+              index === 0
+                ? "bg-white text-black"
+                : "bg-white/10 text-white hover:bg-white/15",
             )}
           >
             {tab}
@@ -76,10 +94,16 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
             Uploads for purchase
           </Typography>
           <div className="hidden items-center gap-3 text-sm font-bold text-muted-foreground sm:flex">
-            <button className="grid h-9 w-9 place-items-center rounded-full bg-white/10 hover:bg-white/15" aria-label="Previous uploads">
+            <button
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/10 hover:bg-white/15"
+              aria-label="Previous uploads"
+            >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <button className="grid h-9 w-9 place-items-center rounded-full bg-white/10 hover:bg-white/15" aria-label="Next uploads">
+            <button
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/10 hover:bg-white/15"
+              aria-label="Next uploads"
+            >
               <ChevronRight className="h-5 w-5" />
             </button>
             <span>View all</span>
@@ -88,7 +112,11 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
           {featuredTracks.map((track) => (
-            <button key={track.id} onClick={() => playPlaylist([track])} className="group min-w-0 text-left">
+            <button
+              key={track.id}
+              onClick={() => playPlaylist([track])}
+              className="group min-w-0 text-left"
+            >
               <img
                 src={track.coverUrl}
                 alt={track.title}
@@ -103,7 +131,14 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
                 </span>
                 <BadgeCheck className="h-5 w-5 shrink-0 text-muted-foreground" />
               </div>
-              <Typography variant="body-sm" tone="muted" className="mt-1" truncate>{track.artist}</Typography>
+              <Typography
+                variant="body-sm"
+                tone="muted"
+                className="mt-1"
+                truncate
+              >
+                {track.artist}
+              </Typography>
             </button>
           ))}
         </div>

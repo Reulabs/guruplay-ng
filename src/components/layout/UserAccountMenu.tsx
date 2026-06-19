@@ -1,6 +1,15 @@
-import { useState } from 'react';
-import { ExternalLink, LogOut, Settings, UserRound, Clock3, LifeBuoy, Shield, CircleDollarSign } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import {
+  ExternalLink,
+  LogOut,
+  Settings,
+  UserRound,
+  Clock3,
+  LifeBuoy,
+  Shield,
+  CircleDollarSign,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +27,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/context/AuthContext';
-import Typography from '@/components/ui/typography';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/AuthContext";
+import Typography from "@/components/ui/typography";
+import { useToast } from "@/hooks/use-toast";
 
 const getInitial = (value?: string) => {
-  return (value || 'G').trim().charAt(0).toUpperCase();
+  return (value || "G").trim().charAt(0).toUpperCase();
 };
 
 const UserAccountMenu = () => {
@@ -33,7 +42,7 @@ const UserAccountMenu = () => {
   const { toast } = useToast();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const name = user?.displayName || user?.email || 'Account';
+  const name = user?.displayName || user?.email || "Account";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -41,15 +50,16 @@ const UserAccountMenu = () => {
     try {
       await logout();
       setIsLogoutOpen(false);
-      navigate('/');
+      navigate("/");
       toast({
-        title: 'Logged out',
-        description: 'Your session has ended.',
+        title: "Logged out",
+        description: "Your session has ended.",
       });
     } catch (error) {
       toast({
-        title: 'Could not log out',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: "Could not log out",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
       setIsLoggingOut(false);
@@ -64,24 +74,42 @@ const UserAccountMenu = () => {
             <span className="grid h-10 w-10 place-items-center rounded-full bg-[#4c9aff] text-base font-black text-black">
               {getInitial(name)}
             </span>
-            <span className="hidden max-w-40 truncate text-sm font-bold sm:block">{name}</span>
+            <span className="hidden max-w-40 truncate text-sm font-bold sm:block">
+              {name}
+            </span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72 rounded-2xl border-white/10 bg-[#242424] p-2 text-white shadow-2xl">
+        <DropdownMenuContent
+          align="end"
+          className="w-72 rounded-2xl border-white/10 bg-[#242424] p-2 text-white shadow-2xl"
+        >
           <DropdownMenuLabel className="px-3 py-3">
-            <Typography variant="body" weight="bold" truncate>{name}</Typography>
-            <Typography variant="caption" className="text-white/50" truncate>{user?.email}</Typography>
+            <Typography variant="body" weight="bold" truncate>
+              {name}
+            </Typography>
+            <Typography variant="caption" className="text-white/50" truncate>
+              {user?.email}
+            </Typography>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-white/10" />
-          <DropdownMenuItem onClick={() => navigate('/dashboard')} className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white">
+          <DropdownMenuItem
+            onClick={() => navigate("/dashboard")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
             <UserRound className="h-5 w-5" />
             Account
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/dashboard')} className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white">
+          <DropdownMenuItem
+            onClick={() => navigate("/dashboard")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
             <CircleDollarSign className="h-5 w-5" />
             Artist dashboard
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/library')} className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white">
+          <DropdownMenuItem
+            onClick={() => navigate("/library")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
             <Clock3 className="h-5 w-5" />
             Recents
           </DropdownMenuItem>
@@ -117,17 +145,20 @@ const UserAccountMenu = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Log out of Guruplay?</AlertDialogTitle>
             <AlertDialogDescription>
-              You will need to log in again before listening, uploading, or viewing account activity.
+              You will need to log in again before listening, uploading, or
+              viewing account activity.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogout}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={isLoggingOut}
             >
-              {isLoggingOut ? 'Logging out...' : 'Log out'}
+              {isLoggingOut ? "Logging out..." : "Log out"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

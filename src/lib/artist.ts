@@ -1,14 +1,14 @@
 export enum UserType {
-  Listener = 'listener',
-  Artist = 'artist',
-  Admin = 'admin',
+  Listener = "listener",
+  Artist = "artist",
+  Admin = "admin",
 }
 
 export enum ArtistApprovalStatus {
-  NotApplied = 'not_applied',
-  Pending = 'pending',
-  Approved = 'approved',
-  Rejected = 'rejected',
+  NotApplied = "not_applied",
+  Pending = "pending",
+  Approved = "approved",
+  Rejected = "rejected",
 }
 
 export interface ArtistProfile {

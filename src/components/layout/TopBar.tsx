@@ -1,10 +1,10 @@
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/lib/utils';
-import NotificationsPopover from '@/components/layout/NotificationsPopover';
-import UserAccountMenu from '@/components/layout/UserAccountMenu';
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
+import NotificationsPopover from "@/components/layout/NotificationsPopover";
+import UserAccountMenu from "@/components/layout/UserAccountMenu";
 
 const TopBar = () => {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ const TopBar = () => {
       </div>
 
       <button
-        onClick={() => navigate('/search')}
+        onClick={() => navigate("/search")}
         className="ml-auto flex h-12 min-w-0 max-w-md flex-1 items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] px-5 text-left text-muted-foreground shadow-inner transition-colors hover:border-white/20 hover:bg-white/[0.1] md:ml-auto"
       >
         <Search className="h-5 w-5" />
@@ -51,14 +51,16 @@ const TopBar = () => {
           <>
             <Button
               variant="ghost"
-              onClick={() => openAuthDialog('signup')}
-              className={cn('rounded-full px-3 font-bold text-white/80 hover:bg-white/10 hover:text-white sm:px-5')}
+              onClick={() => openAuthDialog("signup")}
+              className={cn(
+                "rounded-full px-3 font-bold text-white/80 hover:bg-white/10 hover:text-white sm:px-5",
+              )}
             >
               Sign up
             </Button>
             <Button
               variant="secondary"
-              onClick={() => openAuthDialog('login')}
+              onClick={() => openAuthDialog("login")}
               className="rounded-full bg-white px-3 font-bold text-black hover:bg-white/90 sm:px-5"
             >
               Log in

@@ -1,7 +1,14 @@
-import { Play, Shuffle, Radio, Share2, MoreHorizontal, Plus } from 'lucide-react';
-import { Artist, Album, Track } from '@/data/mockData';
-import { Button } from '@/components/ui/button';
-import Typography from '@/components/ui/typography';
+import {
+  Play,
+  Shuffle,
+  Radio,
+  Share2,
+  MoreHorizontal,
+  Plus,
+} from "lucide-react";
+import { Artist, Album, Track } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
+import Typography from "@/components/ui/typography";
 
 interface ArtistHeroProps {
   artist: Artist;
@@ -11,9 +18,16 @@ interface ArtistHeroProps {
   onShuffle?: () => void;
 }
 
-const getListenerCount = (tracks: Track[]) => Math.max(tracks.length * 347291, 1200);
+const getListenerCount = (tracks: Track[]) =>
+  Math.max(tracks.length * 347291, 1200);
 
-const ArtistHero = ({ artist, tracks, albums, onPlay, onShuffle }: ArtistHeroProps) => {
+const ArtistHero = ({
+  artist,
+  tracks,
+  albums,
+  onPlay,
+  onShuffle,
+}: ArtistHeroProps) => {
   return (
     <section className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
       <div className="relative min-h-[420px] p-6 md:p-10">
@@ -28,18 +42,33 @@ const ArtistHero = ({ artist, tracks, albums, onPlay, onShuffle }: ArtistHeroPro
           <Typography variant="eyebrow" weight="bold" className="text-white/55">
             Verified artist
           </Typography>
-          <Typography as="h1" variant="display" weight="black" className="mt-4 text-white md:text-6xl">
+          <Typography
+            as="h1"
+            variant="display"
+            weight="black"
+            className="mt-4 text-white md:text-6xl"
+          >
             {artist.name}
           </Typography>
           <Typography variant="title" className="mt-3 max-w-xl text-white/70">
-            {artist.genres.join(' / ')} artist with {getListenerCount(tracks).toLocaleString()} monthly listeners.
+            {artist.genres.join(" / ")} artist with{" "}
+            {getListenerCount(tracks).toLocaleString()} monthly listeners.
           </Typography>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button onClick={onPlay} className="h-12 rounded-full bg-white px-7 font-bold text-black hover:bg-white/90" disabled={tracks.length === 0}>
+            <Button
+              onClick={onPlay}
+              className="h-12 rounded-full bg-white px-7 font-bold text-black hover:bg-white/90"
+              disabled={tracks.length === 0}
+            >
               <Play className="h-4 w-4 fill-current" />
               Play
             </Button>
-            <Button onClick={onShuffle || onPlay} variant="secondary" className="h-12 rounded-full border border-white/10 bg-white/[0.08] px-6 font-bold text-white hover:bg-white/[0.12]" disabled={tracks.length === 0}>
+            <Button
+              onClick={onShuffle || onPlay}
+              variant="secondary"
+              className="h-12 rounded-full border border-white/10 bg-white/[0.08] px-6 font-bold text-white hover:bg-white/[0.12]"
+              disabled={tracks.length === 0}
+            >
               <Shuffle className="h-4 w-4" />
               Shuffle
             </Button>

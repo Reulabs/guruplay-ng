@@ -1,26 +1,26 @@
-import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Shuffle, 
-  Repeat, 
-  Repeat1, 
-  Volume2, 
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Shuffle,
+  Repeat,
+  Repeat1,
+  Volume2,
   VolumeX,
   ListMusic,
-  Heart
-} from 'lucide-react';
-import { usePlayer } from '@/context/PlayerContext';
-import { cn } from '@/lib/utils';
-import { Slider } from '@/components/ui/slider';
-import { useState } from 'react';
+  Heart,
+} from "lucide-react";
+import { usePlayer } from "@/context/PlayerContext";
+import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
 
 const formatTime = (seconds: number) => {
-  if (isNaN(seconds)) return '0:00';
+  if (isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
 const PlayerBar = () => {
@@ -59,17 +59,23 @@ const PlayerBar = () => {
             className="h-14 w-14 rounded-lg object-cover shadow-lg"
           />
           <div className="min-w-0">
-            <p className="text-sm font-medium truncate hover:underline cursor-pointer">{currentTrack.title}</p>
-            <p className="text-xs text-muted-foreground truncate hover:underline cursor-pointer">{currentTrack.artist}</p>
+            <p className="text-sm font-medium truncate hover:underline cursor-pointer">
+              {currentTrack.title}
+            </p>
+            <p className="text-xs text-muted-foreground truncate hover:underline cursor-pointer">
+              {currentTrack.artist}
+            </p>
           </div>
           <button
             onClick={() => setLiked(!liked)}
             className={cn(
-              'hidden sm:flex p-2 transition-colors',
-              liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              "hidden sm:flex p-2 transition-colors",
+              liked
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Heart className={cn('h-4 w-4', liked && 'fill-current')} />
+            <Heart className={cn("h-4 w-4", liked && "fill-current")} />
           </button>
         </div>
 
@@ -79,8 +85,10 @@ const PlayerBar = () => {
             <button
               onClick={toggleShuffle}
               className={cn(
-                'hidden sm:flex p-2 transition-colors',
-                shuffle ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                "hidden sm:flex p-2 transition-colors",
+                shuffle
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Shuffle className="h-4 w-4" />
@@ -95,7 +103,11 @@ const PlayerBar = () => {
               onClick={toggle}
               className="p-2.5 rounded-full bg-white text-black shadow-lg hover:scale-105 transition-transform"
             >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+              {isPlaying ? (
+                <Pause className="h-5 w-5" />
+              ) : (
+                <Play className="h-5 w-5 ml-0.5" />
+              )}
             </button>
             <button
               onClick={next}
@@ -106,11 +118,17 @@ const PlayerBar = () => {
             <button
               onClick={toggleRepeat}
               className={cn(
-                'hidden sm:flex p-2 transition-colors',
-                repeat !== 'off' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                "hidden sm:flex p-2 transition-colors",
+                repeat !== "off"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {repeat === 'one' ? <Repeat1 className="h-4 w-4" /> : <Repeat className="h-4 w-4" />}
+              {repeat === "one" ? (
+                <Repeat1 className="h-4 w-4" />
+              ) : (
+                <Repeat className="h-4 w-4" />
+              )}
             </button>
           </div>
 
@@ -137,8 +155,10 @@ const PlayerBar = () => {
           <button
             onClick={() => setShowQueue(!showQueue)}
             className={cn(
-              'p-2 transition-colors',
-              showQueue ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              "p-2 transition-colors",
+              showQueue
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <ListMusic className="h-4 w-4" />
@@ -147,7 +167,11 @@ const PlayerBar = () => {
             onClick={() => setVolume(volume === 0 ? 0.7 : 0)}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            {volume === 0 ? (
+              <VolumeX className="h-4 w-4" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
           </button>
           <Slider
             value={[volume * 100]}

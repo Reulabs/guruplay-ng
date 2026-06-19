@@ -1,37 +1,50 @@
-import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
-import { artists, tracks, albums } from '@/data/mockData';
-import { usePlayer } from '@/context/PlayerContext';
-import { Input } from '@/components/ui/input';
-import Typography from '@/components/ui/typography';
-import { cn } from '@/lib/utils';
-import ArtistHero from '@/components/artist/ArtistHero';
-import ArtistCardRow from '@/components/artist/ArtistCardRow';
-import ArtistTrackTable from '@/components/artist/ArtistTrackTable';
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { artists, tracks, albums } from "@/data/mockData";
+import { usePlayer } from "@/context/PlayerContext";
+import { Input } from "@/components/ui/input";
+import Typography from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
+import ArtistHero from "@/components/artist/ArtistHero";
+import ArtistCardRow from "@/components/artist/ArtistCardRow";
+import ArtistTrackTable from "@/components/artist/ArtistTrackTable";
 
 const Artist = () => {
   const { playPlaylist } = usePlayer();
-  const [query, setQuery] = useState('');
-  const [activeGenre, setActiveGenre] = useState('All');
-  const genres = useMemo(() => ['All', ...Array.from(new Set(artists.flatMap((artist) => artist.genres)))], []);
+  const [query, setQuery] = useState("");
+  const [activeGenre, setActiveGenre] = useState("All");
+  const genres = useMemo(
+    () => [
+      "All",
+      ...Array.from(new Set(artists.flatMap((artist) => artist.genres))),
+    ],
+    [],
+  );
 
   const visibleArtists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return artists.filter((artist) => {
-      const matchesGenre = activeGenre === 'All' || artist.genres.includes(activeGenre);
+      const matchesGenre =
+        activeGenre === "All" || artist.genres.includes(activeGenre);
       const matchesQuery =
         !normalizedQuery ||
         artist.name.toLowerCase().includes(normalizedQuery) ||
-        artist.genres.some((genre) => genre.toLowerCase().includes(normalizedQuery));
+        artist.genres.some((genre) =>
+          genre.toLowerCase().includes(normalizedQuery),
+        );
 
       return matchesGenre && matchesQuery;
     });
   }, [activeGenre, query]);
 
   const featuredArtist = visibleArtists[0] || artists[0];
-  const featuredTracks = tracks.filter((track) => track.artist === featuredArtist.name);
-  const artistAlbums = albums.filter((album) => album.artist === featuredArtist.name);
+  const featuredTracks = tracks.filter(
+    (track) => track.artist === featuredArtist.name,
+  );
+  const artistAlbums = albums.filter(
+    (album) => album.artist === featuredArtist.name,
+  );
 
   return (
     <div className="space-y-8 p-4 pb-28 md:p-8">
@@ -69,10 +82,10 @@ const Artist = () => {
               key={genre}
               onClick={() => setActiveGenre(genre)}
               className={cn(
-                'shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors',
+                "shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors",
                 activeGenre === genre
-                  ? 'bg-white text-black'
-                  : 'bg-white/[0.06] text-white/65 hover:bg-white/[0.1] hover:text-white'
+                  ? "bg-white text-black"
+                  : "bg-white/[0.06] text-white/65 hover:bg-white/[0.1] hover:text-white",
               )}
             >
               {genre}
@@ -82,7 +95,9 @@ const Artist = () => {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleArtists.map((artist) => {
-            const artistTracks = tracks.filter((track) => track.artist === artist.name);
+            const artistTracks = tracks.filter(
+              (track) => track.artist === artist.name,
+            );
 
             return (
               <ArtistCardRow

@@ -1,5 +1,10 @@
 import { useState, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +26,12 @@ interface UploadSongModalProps {
   }) => Promise<void>;
 }
 
-const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongModalProps) => {
+const UploadSongModal = ({
+  isOpen,
+  onClose,
+  artistName,
+  onUpload,
+}: UploadSongModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     artist: "",
@@ -37,7 +47,9 @@ const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongMo
   const coverInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -74,29 +86,55 @@ const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongMo
         coverUrl: coverPreview || "",
         audioFile,
       });
-      setFormData({ name: "", artist: "", album: "", genre: "", description: "" });
+      setFormData({
+        name: "",
+        artist: "",
+        album: "",
+        genre: "",
+        description: "",
+      });
       setCoverPreview(null);
       setAudioFile(null);
       onClose();
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Unable to upload song.");
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to upload song.",
+      );
     } finally {
       setIsUploading(false);
     }
   };
 
   const resetForm = () => {
-    setFormData({ name: "", artist: "", album: "", genre: "", description: "" });
+    setFormData({
+      name: "",
+      artist: "",
+      album: "",
+      genre: "",
+      description: "",
+    });
     setCoverPreview(null);
     setAudioFile(null);
     setError(null);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { resetForm(); onClose(); } }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          resetForm();
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-lg bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Upload New Song</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            Upload New Song
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -108,10 +146,17 @@ const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongMo
             >
               {coverPreview ? (
                 <>
-                  <img src={coverPreview} alt="Cover preview" className="w-full h-full object-cover" />
+                  <img
+                    src={coverPreview}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover"
+                  />
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); setCoverPreview(null); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCoverPreview(null);
+                    }}
                     className="absolute top-2 right-2 w-6 h-6 bg-background/80 rounded-full flex items-center justify-center hover:bg-background"
                   >
                     <X className="w-4 h-4" />
@@ -145,14 +190,19 @@ const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongMo
                     <Music className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{audioFile.name}</p>
+                    <p className="text-sm font-medium truncate">
+                      {audioFile.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); setAudioFile(null); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAudioFile(null);
+                    }}
                     className="w-6 h-6 bg-background/80 rounded-full flex items-center justify-center hover:bg-background"
                   >
                     <X className="w-4 h-4" />
@@ -161,7 +211,9 @@ const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongMo
               ) : (
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Upload className="w-5 h-5" />
-                  <span className="text-sm">Click to upload audio file (MP3, WAV)</span>
+                  <span className="text-sm">
+                    Click to upload audio file (MP3, WAV)
+                  </span>
                 </div>
               )}
             </div>
@@ -249,7 +301,10 @@ const UploadSongModal = ({ isOpen, onClose, artistName, onUpload }: UploadSongMo
               type="button"
               variant="outline"
               className="flex-1"
-              onClick={() => { resetForm(); onClose(); }}
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
             >
               Cancel
             </Button>
