@@ -1,12 +1,14 @@
-import { ChevronLeft, ChevronRight, LogOut, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import NotificationsPopover from '@/components/layout/NotificationsPopover';
+import UserAccountMenu from '@/components/layout/UserAccountMenu';
 
 const TopBar = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout, openAuthDialog } = useAuth();
+  const { isAuthenticated, openAuthDialog } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 flex h-20 items-center gap-3 bg-black/55 px-4 backdrop-blur-xl md:px-8">
@@ -42,17 +44,8 @@ const TopBar = () => {
       <div className="flex shrink-0 items-center gap-2">
         {isAuthenticated ? (
           <>
-            <span className="hidden max-w-40 truncate text-sm font-semibold text-white/80 sm:block">
-              {user?.displayName || user?.email}
-            </span>
-            <Button
-              variant="secondary"
-              onClick={logout}
-              className="rounded-full border border-white/10 bg-white/[0.06] px-4 text-white hover:bg-white/12"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Log out</span>
-            </Button>
+            <NotificationsPopover />
+            <UserAccountMenu />
           </>
         ) : (
           <>

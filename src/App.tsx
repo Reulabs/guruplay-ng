@@ -13,6 +13,8 @@ import Home from "./pages/Home";
 import Search from "./pages/Search";
 import Library from "./pages/Library";
 import PlaylistDetail from "./pages/PlaylistDetail";
+import Artist from "./pages/Artist";
+import ArtistDetail from "./pages/ArtistDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -35,6 +37,8 @@ const App = () => (
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<Search />} />
+                <Route path="/artist" element={<Artist />} />
+                <Route path="/artist/:id" element={<ArtistDetail />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/playlist/:id" element={<PlaylistDetail />} />
               </Route>

@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getAppError } from '@/lib/errors';
 
 interface AuthFormProps {
   mode: AuthMode;
@@ -13,7 +15,7 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -23,15 +25,21 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [signupStep, setSignupStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isSignup = mode === 'signup';
   const stepLabels = ['Account', 'Profile'];
 
   useEffect(() => {
     setSignupStep(0);
+    setErrorCode(null);
+    setErrorMessage(null);
   }, [mode]);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setErrorCode(null);
+    setErrorMessage(null);
 
     if (isSignup && signupStep === 0) {
       if (password !== confirmPassword) {
@@ -39,6 +47,8 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
           title: 'Passwords do not match',
           description: 'Check both password fields and try again.',
         });
+        setErrorCode('PASSWORDS_DO_NOT_MATCH');
+        setErrorMessage('Check both password fields and try again.');
         return;
       }
 
@@ -51,21 +61,42 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
         title: 'Passwords do not match',
         description: 'Check both password fields and try again.',
       });
+      setErrorCode('PASSWORDS_DO_NOT_MATCH');
+      setErrorMessage('Check both password fields and try again.');
       return;
     }
 
     setIsLoading(true);
 
-    window.setTimeout(() => {
-      login({
-        email,
-        displayName: isSignup ? displayName : undefined,
-        dateOfBirth: isSignup ? dateOfBirth : undefined,
-        gender: isSignup ? gender : undefined,
+    try {
+      if (isSignup) {
+        await signup({
+          email,
+          password,
+          displayName,
+          dateOfBirth,
+          gender,
+        });
+      } else {
+        await login(email, password);
+      }
+
+      toast({
+        title: isSignup ? 'Account created' : 'Logged in',
+        description: isSignup ? 'Your Guruplay account is ready.' : 'Welcome back to Guruplay.',
       });
-      setIsLoading(false);
       onSuccess?.();
-    }, 500);
+    } catch (error) {
+      const appError = getAppError(error);
+      setErrorCode(appError.code);
+      setErrorMessage(appError.message);
+      toast({
+        title: isSignup ? 'Could not create account' : 'Could not log in',
+        description: `${appError.code}: ${appError.message}`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,6 +117,13 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             </div>
           ))}
         </div>
+      )}
+
+      {errorCode && errorMessage && (
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
+          <AlertTitle>{errorCode}</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
       )}
 
       {(!isSignup || signupStep === 0) && (

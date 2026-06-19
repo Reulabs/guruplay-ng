@@ -1,6 +1,7 @@
 import { Play } from 'lucide-react';
 import { Artist, tracks } from '@/data/mockData';
 import { usePlayer } from '@/context/PlayerContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ArtistCardProps {
   artist: Artist;
@@ -8,8 +9,8 @@ interface ArtistCardProps {
 
 const ArtistCard = ({ artist }: ArtistCardProps) => {
   const { playPlaylist } = usePlayer();
+  const navigate = useNavigate();
 
-  // Get tracks by this artist
   const artistTracks = tracks.filter(t => t.artist === artist.name);
 
   const handlePlay = (e: React.MouseEvent) => {
@@ -20,7 +21,10 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
   };
 
   return (
-    <div className="group p-4 rounded-md bg-card hover:bg-secondary/80 transition-all duration-300 cursor-pointer">
+    <div
+      onClick={() => navigate(`/artist/${artist.id}`)}
+      className="group p-4 rounded-md bg-card hover:bg-secondary/80 transition-all duration-300 cursor-pointer"
+    >
       <div className="relative mb-4">
         <img
           src={artist.imageUrl}

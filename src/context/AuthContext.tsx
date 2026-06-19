@@ -1,51 +1,117 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { AppError, AppErrorCode, getAppError } from '@/lib/errors';
 
 export type AuthMode = 'login' | 'signup';
 
-interface AuthUser {
+export interface AuthUser {
+  id: string;
   email: string;
   displayName?: string;
   dateOfBirth?: string;
   gender?: string;
 }
 
+export interface SignUpProfile {
+  email: string;
+  password: string;
+  displayName: string;
+  dateOfBirth: string;
+  gender: string;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
   authDialogMode: AuthMode;
   isAuthDialogOpen: boolean;
-  login: (user: AuthUser) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (profile: SignUpProfile) => Promise<void>;
+  logout: () => Promise<void>;
   openAuthDialog: (mode?: AuthMode) => void;
   closeAuthDialog: () => void;
 }
 
-const AUTH_STORAGE_KEY = 'guru-music-auth-user';
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const getStoredUser = (): AuthUser | null => {
-  try {
-    const storedUser = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    return storedUser ? JSON.parse(storedUser) : null;
-  } catch {
-    return null;
-  }
+const getAuthUser = (user: User): AuthUser => {
+  const metadata = user.user_metadata || {};
+
+  return {
+    id: user.id,
+    email: user.email || '',
+    displayName: metadata.display_name || metadata.displayName,
+    dateOfBirth: metadata.date_of_birth || metadata.dateOfBirth,
+    gender: metadata.gender,
+  };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authDialogMode, setAuthDialogMode] = useState<AuthMode>('login');
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
-  const login = useCallback((nextUser: AuthUser) => {
-    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
-    setUser(nextUser);
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsAuthLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ? getAuthUser(data.session.user) : null);
+      setIsAuthLoading(false);
+    });
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? getAuthUser(session.user) : null);
+      setIsAuthLoading(false);
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      throw new AppError(AppErrorCode.SupabaseNotConfigured);
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw getAppError(error);
+    if (data.user) setUser(getAuthUser(data.user));
     setIsAuthDialogOpen(false);
   }, []);
 
-  const logout = useCallback(() => {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  const signup = useCallback(async (profile: SignUpProfile) => {
+    if (!isSupabaseConfigured) {
+      throw new AppError(AppErrorCode.SupabaseNotConfigured);
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: profile.email,
+      password: profile.password,
+      options: {
+        data: {
+          display_name: profile.displayName,
+          date_of_birth: profile.dateOfBirth,
+          gender: profile.gender,
+        },
+      },
+    });
+
+    if (error) throw getAppError(error);
+    if (data.user) setUser(getAuthUser(data.user));
+    setIsAuthDialogOpen(false);
+  }, []);
+
+  const logout = useCallback(async () => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw getAppError(error);
+    }
+
     setUser(null);
   }, []);
 
@@ -62,14 +128,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     () => ({
       user,
       isAuthenticated: Boolean(user),
+      isAuthLoading,
       authDialogMode,
       isAuthDialogOpen,
       login,
+      signup,
       logout,
       openAuthDialog,
       closeAuthDialog,
     }),
-    [authDialogMode, closeAuthDialog, isAuthDialogOpen, login, logout, openAuthDialog, user]
+    [authDialogMode, closeAuthDialog, isAuthDialogOpen, isAuthLoading, login, logout, openAuthDialog, signup, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
