@@ -8,6 +8,8 @@ import AnalyticsChart from "@/components/dashboard/AnalyticsChart";
 import TopSongsTable from "@/components/dashboard/TopSongsTable";
 import { supabase } from "@/lib/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/context/AuthContext";
+import Typography from "@/components/ui/typography";
 
 interface UploadedSong {
   id: string;
@@ -30,6 +32,7 @@ interface DashboardMetrics {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadedSongs, setUploadedSongs] = useState<UploadedSong[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
@@ -165,7 +168,8 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    navigate("/login");
+    logout();
+    navigate("/");
   };
 
   const handleSongUploaded = async (song: Omit<UploadedSong, "id" | "plays" | "uploadedAt">) => {
@@ -230,7 +234,7 @@ const Dashboard = () => {
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <Music2 className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg">Melodify</span>
+              <span className="font-bold text-lg">Guruplay</span>
             </Link>
 
             <div className="flex items-center gap-4">
@@ -253,8 +257,8 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Analytics Dashboard</h1>
-            <p className="text-muted-foreground">Track your music performance and audience engagement</p>
+            <Typography as="h1" variant="h1" weight="bold" className="mb-1">Analytics Dashboard</Typography>
+            <Typography variant="body" tone="muted">Track your music performance and audience engagement</Typography>
           </div>
           <Button
             onClick={() => setIsUploadOpen(true)}
@@ -349,7 +353,7 @@ const Dashboard = () => {
 
           <TabsContent value="songs" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Your Songs</h2>
+              <Typography as="h2" variant="h2" weight="bold">Your Songs</Typography>
               <p className="text-muted-foreground">{uploadedSongs.length} tracks</p>
             </div>
 

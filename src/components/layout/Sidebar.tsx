@@ -1,118 +1,83 @@
-import { Home, Search, Library, Plus, Heart } from 'lucide-react';
+import { Compass, Mic2, Disc, Radio, Music, Download, ShoppingBag, Heart, RotateCcw } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { playlists } from '@/data/mockData';
+import Typography from '@/components/ui/typography';
+import { DefaultLogo } from '@/components/misc/logo';
 
 const Sidebar = () => {
-  const mainNav = [
-    { icon: Home, label: 'Home', path: '/' },
-    { icon: Search, label: 'Search', path: '/search' },
+  const browseItems = [
+    { icon: Compass, label: 'Discover', path: '/' },
+    { icon: Mic2, label: 'Artists', path: '/artist' },
+    { icon: Disc, label: 'Albums', path: '/search' },
+    { icon: Radio, label: 'Stations', path: '/search' },
+    { icon: Music, label: 'Music', path: '/search' },
+  ];
+
+  const yourMusicItems = [
+    { icon: Download, label: 'Downloads', path: '/library' },
+    { icon: ShoppingBag, label: 'Purchased', path: '/library' },
+    { icon: Heart, label: 'Favourites', path: '/library' },
+    { icon: RotateCcw, label: 'History', path: '/library' },
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-[280px] gap-2 p-2 h-full">
-      {/* Main Navigation Card */}
-      <div className="bg-card rounded-lg p-3">
-        <nav>
-          <ul className="space-y-1">
-            {mainNav.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-4 px-3 py-2 rounded-md text-sm font-semibold transition-colors',
-                      isActive
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )
-                  }
-                >
-                  <item.icon className="h-6 w-6" />
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+    <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-[300px] flex-col gap-8 border-r border-white/10 bg-[#050505] px-6 py-8 text-white/55 shadow-[12px_0_80px_-30px_rgba(0,0,0,0.9)]">
+      <div className="space-y-4">
+        <DefaultLogo markClassName="h-14 w-14" textClassName="text-lg" />
+      </div>
+
+      <div className="space-y-4">
+        <Typography variant="eyebrow" weight="bold" className="text-white/35">
+          Browse Music
+        </Typography>
+        <nav className="space-y-2">
+          {browseItems.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.path}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-4 rounded-xl px-4 py-3 transition-colors',
+                  isActive
+                    ? 'bg-white/10 text-white shadow-inner'
+                    : 'text-white/55 hover:text-white hover:bg-white/[0.06]'
+                )
+              }
+            >
+              <item.icon className="h-5 w-5" />
+              <Typography variant="sm" weight="semibold" className="truncate">
+                {item.label}
+              </Typography>
+            </NavLink>
+          ))}
         </nav>
       </div>
 
-      {/* Library Card */}
-      <div className="flex-1 bg-card rounded-lg flex flex-col min-h-0">
-        {/* Library Header */}
-        <div className="flex items-center justify-between p-4 pb-2">
-          <NavLink
-            to="/library"
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 text-sm font-semibold transition-colors',
-                isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-              )
-            }
-          >
-            <Library className="h-6 w-6" />
-            Your Library
-          </NavLink>
-          <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-colors">
-            <Plus className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Playlist Actions */}
-        <div className="px-2 pb-2">
-          <NavLink
-            to="/library/liked"
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 w-full p-2 rounded-md text-sm transition-colors',
-                isActive
-                  ? 'bg-secondary text-foreground'
-                  : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
-              )
-            }
-          >
-            <div className="h-12 w-12 rounded bg-gradient-to-br from-indigo-700 to-slate-300 flex items-center justify-center">
-              <Heart className="h-5 w-5 text-white fill-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-medium truncate text-foreground">Liked Songs</p>
-              <p className="text-xs text-muted-foreground">Playlist</p>
-            </div>
-          </NavLink>
-        </div>
-
-        {/* Playlists */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-2">
-          <ul className="space-y-0.5">
-            {playlists.map((playlist) => (
-              <li key={playlist.id}>
-                <NavLink
-                  to={`/playlist/${playlist.id}`}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 p-2 rounded-md text-sm transition-colors',
-                      isActive
-                        ? 'bg-secondary text-foreground'
-                        : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
-                    )
-                  }
-                >
-                  <img
-                    src={playlist.coverUrl}
-                    alt={playlist.name}
-                    className="h-12 w-12 rounded object-cover"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-medium truncate text-foreground">{playlist.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      Playlist • {playlist.tracks.length} songs
-                    </p>
-                  </div>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="space-y-4 flex-1 overflow-hidden">
+        <Typography variant="eyebrow" weight="bold" className="text-white/35">
+          Your Music
+        </Typography>
+        <nav className="space-y-2 overflow-y-auto scrollbar-thin pr-1">
+          {yourMusicItems.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.path}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-4 rounded-xl px-4 py-3 transition-colors',
+                  isActive
+                    ? 'bg-white/10 text-white shadow-inner'
+                    : 'text-white/55 hover:text-white hover:bg-white/[0.06]'
+                )
+              }
+            >
+              <item.icon className="h-5 w-5" />
+              <Typography variant="sm" weight="semibold" className="truncate">
+                {item.label}
+              </Typography>
+            </NavLink>
+          ))}
+        </nav>
       </div>
     </aside>
   );

@@ -89,7 +89,7 @@ export const playlists: Playlist[] = [
     description: 'Relaxing tracks for your evening',
     coverUrl: coverImages[2],
     tracks: [tracks[2], tracks[7], tracks[0], tracks[5]],
-    createdBy: 'Melodify',
+    createdBy: 'Guruplay',
   },
   {
     id: '2',
@@ -97,7 +97,7 @@ export const playlists: Playlist[] = [
     description: 'High energy electronic music',
     coverUrl: coverImages[1],
     tracks: [tracks[1], tracks[6], tracks[4], tracks[9]],
-    createdBy: 'Melodify',
+    createdBy: 'Guruplay',
   },
   {
     id: '3',
@@ -105,7 +105,7 @@ export const playlists: Playlist[] = [
     description: 'Perfect soundtrack for late night drives',
     coverUrl: coverImages[0],
     tracks: [tracks[0], tracks[5], tracks[3], tracks[8]],
-    createdBy: 'Melodify',
+    createdBy: 'Guruplay',
   },
   {
     id: '4',
@@ -113,7 +113,7 @@ export const playlists: Playlist[] = [
     description: 'Stay productive with these beats',
     coverUrl: coverImages[4],
     tracks: [tracks[4], tracks[9], tracks[2], tracks[10]],
-    createdBy: 'Melodify',
+    createdBy: 'Guruplay',
   },
   {
     id: '5',
@@ -121,7 +121,7 @@ export const playlists: Playlist[] = [
     description: 'Get pumped with energetic tracks',
     coverUrl: coverImages[3],
     tracks: [tracks[3], tracks[1], tracks[8], tracks[6]],
-    createdBy: 'Melodify',
+    createdBy: 'Guruplay',
   },
   {
     id: '6',
@@ -129,7 +129,7 @@ export const playlists: Playlist[] = [
     description: 'New music picked just for you',
     coverUrl: coverImages[5],
     tracks: [tracks[10], tracks[11], tracks[0], tracks[4]],
-    createdBy: 'Melodify',
+    createdBy: 'Guruplay',
   },
 ];
 

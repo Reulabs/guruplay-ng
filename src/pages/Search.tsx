@@ -5,6 +5,7 @@ import { tracks, artists, playlists, genres, moods } from '@/data/mockData';
 import TrackCard from '@/components/cards/TrackCard';
 import PlaylistCard from '@/components/cards/PlaylistCard';
 import ArtistCard from '@/components/cards/ArtistCard';
+import Typography from '@/components/ui/typography';
 
 const Search = () => {
   const [query, setQuery] = useState('');
@@ -28,7 +29,7 @@ const Search = () => {
     <div className="p-6 pb-40">
       {/* Search Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Search</h1>
+        <Typography as="h1" variant="h1" weight="bold" className="mb-4">Search</Typography>
         <div className="relative max-w-md">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -46,7 +47,7 @@ const Search = () => {
           {/* Tracks */}
           {searchResults.tracks.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-4">Songs</h2>
+              <Typography as="h2" variant="h2" weight="bold" className="mb-4">Songs</Typography>
               <div className="bg-card rounded-lg p-2">
                 {searchResults.tracks.slice(0, 5).map((track, index) => (
                   <TrackCard key={track.id} track={track} index={index + 1} showIndex />
@@ -58,7 +59,7 @@ const Search = () => {
           {/* Artists */}
           {searchResults.artists.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-4">Artists</h2>
+              <Typography as="h2" variant="h2" weight="bold" className="mb-4">Artists</Typography>
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {searchResults.artists.map((artist) => (
                   <div key={artist.id} className="min-w-[160px] max-w-[160px]">
@@ -72,7 +73,7 @@ const Search = () => {
           {/* Playlists */}
           {searchResults.playlists.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-4">Playlists</h2>
+              <Typography as="h2" variant="h2" weight="bold" className="mb-4">Playlists</Typography>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {searchResults.playlists.map((playlist) => (
                   <PlaylistCard key={playlist.id} playlist={playlist} />
@@ -95,7 +96,7 @@ const Search = () => {
         <div className="space-y-8">
           {/* Genres */}
           <section>
-            <h2 className="text-xl font-bold mb-4">Browse Genres</h2>
+            <Typography as="h2" variant="h2" weight="bold" className="mb-4">Browse Genres</Typography>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {genres.map((genre) => (
                 <div
@@ -110,14 +111,14 @@ const Search = () => {
 
           {/* Moods */}
           <section>
-            <h2 className="text-xl font-bold mb-4">Browse by Mood</h2>
+            <Typography as="h2" variant="h2" weight="bold" className="mb-4">Browse by Mood</Typography>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               {moods.map((mood) => (
                 <div
                   key={mood.id}
                   className={`rounded-lg bg-gradient-to-br ${mood.color} p-4 flex items-center justify-center gap-2 cursor-pointer hover:scale-105 transition-transform`}
                 >
-                  <span className="text-2xl">{mood.emoji}</span>
+                  <span className="text-xl">{mood.emoji}</span>
                   <span className="font-bold text-white">{mood.name}</span>
                 </div>
               ))}

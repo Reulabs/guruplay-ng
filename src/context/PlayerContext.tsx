@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { Track } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { useRequireAuth } from '@/hooks/use-require-auth';
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -36,6 +38,8 @@ export const usePlayer = () => {
 };
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  const requireAuth = useRequireAuth();
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -47,6 +51,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [originalQueue, setOriginalQueue] = useState<Track[]>([]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const requireLogin = useCallback(() => {
+    const canPlay = requireAuth({
+      title: 'Log in to listen',
+      description: 'You need to be logged in before playing songs.',
+    });
+
+    if (!canPlay) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsPlaying(false);
+    }
+
+    return canPlay;
+  }, [requireAuth]);
 
   useEffect(() => {
     audioRef.current = new Audio();
@@ -98,7 +118,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [volume]);
 
+  useEffect(() => {
+    if (!isAuthenticated && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [isAuthenticated]);
+
   const play = useCallback((track?: Track) => {
+    if (!requireLogin()) return;
+
     if (track) {
       setCurrentTrack(track);
       setIsPlaying(true);
@@ -110,7 +139,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audioRef.current.play().catch(console.error);
       setIsPlaying(true);
     }
-  }, [currentTrack]);
+  }, [currentTrack, requireLogin]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
@@ -128,6 +157,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isPlaying, play, pause]);
 
   const next = useCallback(() => {
+    if (!requireLogin()) return;
+
     if (queue.length === 0) {
       if (repeat === 'all' && originalQueue.length > 0) {
         setQueue(shuffle ? shuffleArray([...originalQueue]) : [...originalQueue]);
@@ -140,7 +171,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const nextTrack = queue[0];
     setQueue(prev => prev.slice(1));
     play(nextTrack);
-  }, [queue, repeat, originalQueue, shuffle, play]);
+  }, [queue, repeat, originalQueue, shuffle, play, requireLogin]);
 
   const previous = useCallback(() => {
     if (audioRef.current && audioRef.current.currentTime > 3) {
@@ -177,6 +208,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const playPlaylist = useCallback((tracks: Track[], startIndex = 0) => {
+    if (!requireLogin()) return;
     if (tracks.length === 0) return;
 
     const tracksToPlay = shuffle ? shuffleArray([...tracks]) : [...tracks];
@@ -189,7 +221,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     setQueue(remainingTracks);
     play(firstTrack);
-  }, [shuffle, play]);
+  }, [shuffle, play, requireLogin]);
 
   const toggleShuffle = useCallback(() => {
     setShuffle(prev => !prev);

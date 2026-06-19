@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
+import Typography from '@/components/ui/typography';
 
 interface HorizontalScrollProps {
   title: string;
@@ -22,7 +23,9 @@ const HorizontalScroll = ({ title, children }: HorizontalScrollProps) => {
   return (
     <section className="mb-10">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold hover:underline cursor-pointer">{title}</h2>
+        <Typography as="h2" variant="h2" weight="bold" className="hover:underline cursor-pointer">
+          {title}
+        </Typography>
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}

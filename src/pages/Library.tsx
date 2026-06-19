@@ -4,6 +4,7 @@ import { playlists, tracks } from '@/data/mockData';
 import PlaylistCard from '@/components/cards/PlaylistCard';
 import TrackCard from '@/components/cards/TrackCard';
 import { cn } from '@/lib/utils';
+import Typography from '@/components/ui/typography';
 
 type ViewMode = 'grid' | 'list';
 type FilterType = 'all' | 'playlists' | 'albums' | 'artists';
@@ -26,7 +27,7 @@ const Library = () => {
     <div className="p-6 pb-40">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Your Library</h1>
+        <Typography as="h1" variant="h1" weight="bold">Your Library</Typography>
         <div className="flex items-center gap-2">
           <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
             <Plus className="h-5 w-5" />
@@ -75,7 +76,7 @@ const Library = () => {
         <div className="flex items-center gap-4 p-4 rounded-lg gradient-primary mb-4 cursor-pointer hover:opacity-90 transition-opacity">
           <div className="flex-1">
             <p className="text-sm text-primary-foreground/80">Playlist</p>
-            <h2 className="text-2xl font-bold text-primary-foreground">Liked Songs</h2>
+            <Typography as="h2" variant="h2" weight="bold" className="text-primary-foreground">Liked Songs</Typography>
             <p className="text-sm text-primary-foreground/80 mt-1">{likedSongs.length} songs</p>
           </div>
         </div>

@@ -4,6 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PlayerProvider } from "@/context/PlayerContext";
+import { AuthProvider } from "@/context/AuthContext";
+import AppDocumentTitle from "@/components/app/AppDocumentTitle";
+import AuthDialog from "@/components/auth/AuthDialog";
+import NetworkStatus from "@/components/system/NetworkStatus";
 import MainLayout from "@/components/layout/MainLayout";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
@@ -19,24 +23,29 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <PlayerProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/library" element={<Library />} />
-              <Route path="/playlist/:id" element={<PlaylistDetail />} />
-            </Route>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </PlayerProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <PlayerProvider>
+            <Toaster />
+            <Sonner />
+            <AppDocumentTitle />
+            <AuthDialog />
+            <NetworkStatus />
+            <Routes>
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/library" element={<Library />} />
+                <Route path="/playlist/:id" element={<PlaylistDetail />} />
+              </Route>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </PlayerProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

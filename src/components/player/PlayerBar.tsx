@@ -45,22 +45,18 @@ const PlayerBar = () => {
   const [liked, setLiked] = useState(false);
 
   if (!currentTrack) {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-black border-t border-border flex items-center justify-center text-muted-foreground text-sm z-50">
-        Select a track to play
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-black border-t border-border z-50">
+    <div className="fixed bottom-3 left-3 right-3 z-50 h-[92px] rounded-2xl border border-white/10 bg-[#101010]/95 shadow-[0_24px_80px_rgba(0,0,0,0.75)] backdrop-blur-xl md:left-[312px]">
       <div className="h-full px-4 flex items-center justify-between gap-4">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0 w-[30%]">
           <img
             src={currentTrack.coverUrl}
             alt={currentTrack.title}
-            className="h-14 w-14 rounded object-cover"
+            className="h-14 w-14 rounded-lg object-cover shadow-lg"
           />
           <div className="min-w-0">
             <p className="text-sm font-medium truncate hover:underline cursor-pointer">{currentTrack.title}</p>
@@ -97,7 +93,7 @@ const PlayerBar = () => {
             </button>
             <button
               onClick={toggle}
-              className="p-2 rounded-full bg-foreground text-background hover:scale-105 transition-transform"
+              className="p-2.5 rounded-full bg-white text-black shadow-lg hover:scale-105 transition-transform"
             >
               {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
             </button>

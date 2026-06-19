@@ -1,6 +1,7 @@
 import { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import Typography from '@/components/ui/typography';
 
 interface MetricCardProps {
   title: string;
@@ -20,8 +21,8 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, iconColor = 'te
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground mb-1">{title}</p>
-            <p className="text-3xl font-bold mb-1">{value}</p>
+            <Typography variant="body-sm" tone="muted" className="mb-1">{title}</Typography>
+            <Typography variant="h2" weight="bold" className="mb-1">{value}</Typography>
             {subtitle && (
               <p className="text-xs text-muted-foreground">{subtitle}</p>
             )}
