@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "seed:admin": "node --env-file=.env script/seed-admin.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

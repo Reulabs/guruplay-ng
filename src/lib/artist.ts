@@ -1,5 +1,5 @@
 export enum UserType {
-  Listener = "listener",
+  User = "user",
   Artist = "artist",
   Admin = "admin",
 }
@@ -20,10 +20,7 @@ export interface ArtistProfile {
   location: string;
   website_url: string;
   social_url: string;
-  user_type: UserType;
   approval_status: ArtistApprovalStatus;
-  is_artist: boolean;
-  is_approved: boolean;
   created_at: string;
   updated_at: string;
 }

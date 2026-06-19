@@ -1,58 +1,8 @@
-/*
-  # Create Analytics Tables for Melodify
-
-  1. New Tables
-    - `users`
-      - `id` (uuid, primary key)
-      - `email` (text, unique)
-      - `display_name` (text)
-      - `created_at` (timestamptz)
-      - `last_login` (timestamptz)
-      
-    - `songs`
-      - `id` (uuid, primary key)
-      - `user_id` (uuid, foreign key)
-      - `title` (text)
-      - `artist` (text)
-      - `cover_url` (text)
-      - `audio_url` (text)
-      - `duration` (integer)
-      - `genre` (text)
-      - `total_plays` (integer)
-      - `total_likes` (integer)
-      - `created_at` (timestamptz)
-      - `updated_at` (timestamptz)
-      
-    - `song_analytics`
-      - `id` (uuid, primary key)
-      - `song_id` (uuid, foreign key)
-      - `date` (date)
-      - `plays` (integer)
-      - `unique_listeners` (integer)
-      - `likes` (integer)
-      - `shares` (integer)
-      - `avg_listen_duration` (integer)
-      - `created_at` (timestamptz)
-      
-    - `user_activity`
-      - `id` (uuid, primary key)
-      - `user_id` (uuid, foreign key)
-      - `song_id` (uuid, foreign key)
-      - `activity_type` (text: play, like, share)
-      - `listen_duration` (integer)
-      - `created_at` (timestamptz)
-
-  2. Security
-    - Enable RLS on all tables
-    - Add policies for authenticated users to manage their own data
-    - Add policies for reading public song data
-*/
-
--- Create users table
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text UNIQUE NOT NULL,
   display_name text NOT NULL,
+  user_type text NOT NULL DEFAULT 'user' CHECK (user_type IN ('user', 'artist', 'admin')),
   created_at timestamptz DEFAULT now(),
   last_login timestamptz DEFAULT now()
 );
@@ -70,7 +20,6 @@ CREATE POLICY "Users can update own data"
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
--- Create songs table
 CREATE TABLE IF NOT EXISTS songs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES users(id) ON DELETE CASCADE NOT NULL,
@@ -109,7 +58,6 @@ CREATE POLICY "Users can delete own songs"
   TO authenticated
   USING (auth.uid() = user_id);
 
--- Create song_analytics table
 CREATE TABLE IF NOT EXISTS song_analytics (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   song_id uuid REFERENCES songs(id) ON DELETE CASCADE NOT NULL,
@@ -146,7 +94,6 @@ CREATE POLICY "System can insert analytics"
     )
   );
 
--- Create user_activity table
 CREATE TABLE IF NOT EXISTS user_activity (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES users(id) ON DELETE CASCADE NOT NULL,
@@ -168,7 +115,6 @@ CREATE POLICY "Users can insert own activity"
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
--- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_songs_user_id ON songs(user_id);
 CREATE INDEX IF NOT EXISTS idx_song_analytics_song_id ON song_analytics(song_id);
 CREATE INDEX IF NOT EXISTS idx_song_analytics_date ON song_analytics(date);

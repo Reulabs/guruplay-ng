@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { UserType } from "@/lib/artist";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
@@ -23,6 +24,15 @@ export interface Song {
   total_likes: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string;
+  user_type: UserType;
+  created_at: string;
+  last_login: string;
 }
 
 export interface SongAnalytics {

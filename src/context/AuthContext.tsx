@@ -9,6 +9,7 @@ import React, {
 import { User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { AppError, AppErrorCode, getAppError } from "@/lib/errors";
+import { UserType } from "@/lib/artist";
 
 export type AuthMode = "login" | "signup";
 
@@ -18,6 +19,7 @@ export interface AuthUser {
   displayName?: string;
   dateOfBirth?: string;
   gender?: string;
+  userType?: UserType;
 }
 
 export interface SignUpProfile {
@@ -43,7 +45,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const getAuthUser = (user: User): AuthUser => {
+const getAuthUser = (user: User, userType?: UserType): AuthUser => {
   const metadata = user.user_metadata || {};
 
   return {
@@ -52,6 +54,7 @@ const getAuthUser = (user: User): AuthUser => {
     displayName: metadata.display_name || metadata.displayName,
     dateOfBirth: metadata.date_of_birth || metadata.dateOfBirth,
     gender: metadata.gender,
+    userType,
   };
 };
 
@@ -70,6 +73,18 @@ const ensureUserRecord = async (user: User) => {
   });
 };
 
+const loadAuthUser = async (user: User): Promise<AuthUser> => {
+  await ensureUserRecord(user);
+
+  const { data } = await supabase
+    .from("users")
+    .select("user_type")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return getAuthUser(user, data?.user_type as UserType | undefined);
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -85,20 +100,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     supabase.auth.getSession().then(async ({ data }) => {
-      if (data.session?.user) {
-        await ensureUserRecord(data.session.user);
-      }
-      setUser(data.session?.user ? getAuthUser(data.session.user) : null);
+      setUser(data.session?.user ? await loadAuthUser(data.session.user) : null);
       setIsAuthLoading(false);
     });
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setTimeout(() => {
-          ensureUserRecord(session.user);
+          loadAuthUser(session.user).then(setUser);
         }, 0);
+      } else {
+        setUser(null);
       }
-      setUser(session?.user ? getAuthUser(session.user) : null);
       setIsAuthLoading(false);
     });
 
@@ -116,8 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     if (error) throw getAppError(error);
     if (data.user) {
-      await ensureUserRecord(data.user);
-      setUser(getAuthUser(data.user));
+      setUser(await loadAuthUser(data.user));
     }
     setIsAuthDialogOpen(false);
   }, []);
@@ -141,8 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (error) throw getAppError(error);
     if (data.user) {
-      await ensureUserRecord(data.user);
-      setUser(getAuthUser(data.user));
+      setUser(await loadAuthUser(data.user));
     }
     setIsAuthDialogOpen(false);
   }, []);

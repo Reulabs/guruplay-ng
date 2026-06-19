@@ -89,6 +89,9 @@ const Dashboard = () => {
   const [artistProfile, setArtistProfile] = useState<ArtistProfile | null>(
     null,
   );
+  const [currentUserType, setCurrentUserType] = useState<UserType>(
+    user?.userType || UserType.User,
+  );
   const [uploadedSongs, setUploadedSongs] = useState<UploadedSong[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>(emptyMetrics);
   const [chartData, setChartData] = useState<
@@ -104,13 +107,14 @@ const Dashboard = () => {
   });
 
   const isApprovedArtist =
-    artistProfile?.user_type === UserType.Artist &&
-    artistProfile.approval_status === ArtistApprovalStatus.Approved;
+    currentUserType === UserType.Artist &&
+    artistProfile?.approval_status === ArtistApprovalStatus.Approved;
   const canUpload = Boolean(isApprovedArtist);
 
   const loadDashboardData = useCallback(async () => {
     if (!user || !isSupabaseConfigured) {
       setArtistProfile(null);
+      setCurrentUserType(UserType.User);
       setUploadedSongs([]);
       setMetrics(emptyMetrics);
       setChartData([]);
@@ -119,6 +123,17 @@ const Dashboard = () => {
     }
 
     setLoading(true);
+    const { data: accountData } = await supabase
+      .from("users")
+      .select("user_type")
+      .eq("id", user.id)
+      .maybeSingle();
+    const nextUserType =
+      (accountData?.user_type as UserType | undefined) ||
+      user.userType ||
+      UserType.User;
+    setCurrentUserType(nextUserType);
+
     const { data: profileData, error: profileError } = await supabase
       .from("artist_profiles")
       .select("*")
@@ -147,7 +162,7 @@ const Dashboard = () => {
     if (
       !nextProfile ||
       nextProfile.approval_status !== ArtistApprovalStatus.Approved ||
-      nextProfile.user_type !== UserType.Artist
+      nextUserType !== UserType.Artist
     ) {
       setUploadedSongs([]);
       setMetrics(emptyMetrics);
@@ -301,7 +316,6 @@ const Dashboard = () => {
         website_url: formData.websiteUrl,
         social_url: formData.socialUrl,
         bio: formData.bio,
-        user_type: UserType.Listener,
         approval_status: ArtistApprovalStatus.Pending,
         updated_at: new Date().toISOString(),
       },
