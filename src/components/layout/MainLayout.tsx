@@ -1,9 +1,9 @@
-import { Outlet } from 'react-router-dom';
-import Sidebar from '@/components/layout/Sidebar';
-import MobileNav from '@/components/layout/MobileNav';
-import PlayerBar from '@/components/player/PlayerBar';
-import TopBar from '@/components/layout/TopBar';
-import PromoBanner from '@/components/layout/PromoBanner';
+import { Outlet } from "react-router-dom";
+import Sidebar from "@/components/layout/Sidebar";
+import MobileNav from "@/components/layout/MobileNav";
+import PlayerBar from "@/components/player/PlayerBar";
+import TopBar from "@/components/layout/TopBar";
+import PromoBanner from "@/components/layout/PromoBanner";
 
 const MainLayout = () => {
   return (

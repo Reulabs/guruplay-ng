@@ -1,7 +1,7 @@
-import { Play } from 'lucide-react';
-import { Playlist } from '@/data/mockData';
-import { usePlayer } from '@/context/PlayerContext';
-import { useNavigate } from 'react-router-dom';
+import { Play } from "lucide-react";
+import { Playlist } from "@/data/mockData";
+import { usePlayer } from "@/context/PlayerContext";
+import { useNavigate } from "react-router-dom";
 
 interface PlaylistCardProps {
   playlist: Playlist;

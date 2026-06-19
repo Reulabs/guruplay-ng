@@ -1,9 +1,9 @@
-import { useParams } from 'react-router-dom';
-import { Play, Clock, Heart, MoreHorizontal } from 'lucide-react';
-import { playlists } from '@/data/mockData';
-import TrackCard from '@/components/cards/TrackCard';
-import { usePlayer } from '@/context/PlayerContext';
-import Typography from '@/components/ui/typography';
+import { useParams } from "react-router-dom";
+import { Play, Clock, Heart, MoreHorizontal } from "lucide-react";
+import { playlists } from "@/data/mockData";
+import TrackCard from "@/components/cards/TrackCard";
+import { usePlayer } from "@/context/PlayerContext";
+import Typography from "@/components/ui/typography";
 
 const PlaylistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +19,10 @@ const PlaylistDetail = () => {
     );
   }
 
-  const totalDuration = playlist.tracks.reduce((acc, track) => acc + track.duration, 0);
+  const totalDuration = playlist.tracks.reduce(
+    (acc, track) => acc + track.duration,
+    0,
+  );
   const formatTotalDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -40,11 +43,28 @@ const PlaylistDetail = () => {
             className="w-48 h-48 md:w-56 md:h-56 rounded-lg object-cover shadow-2xl"
           />
           <div className="text-center md:text-left">
-            <Typography variant="eyebrow" weight="medium" className="text-white/80">Playlist</Typography>
-            <Typography as="h1" variant="display" weight="black" className="mt-2 mb-4">{playlist.name}</Typography>
-            <Typography variant="body" tone="muted" className="mb-2">{playlist.description}</Typography>
+            <Typography
+              variant="eyebrow"
+              weight="medium"
+              className="text-white/80"
+            >
+              Playlist
+            </Typography>
+            <Typography
+              as="h1"
+              variant="display"
+              weight="black"
+              className="mt-2 mb-4"
+            >
+              {playlist.name}
+            </Typography>
+            <Typography variant="body" tone="muted" className="mb-2">
+              {playlist.description}
+            </Typography>
             <div className="flex items-center justify-center md:justify-start gap-1 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{playlist.createdBy}</span>
+              <span className="font-medium text-foreground">
+                {playlist.createdBy}
+              </span>
               <span>•</span>
               <span>{playlist.tracks.length} songs,</span>
               <span>{formatTotalDuration(totalDuration)}</span>

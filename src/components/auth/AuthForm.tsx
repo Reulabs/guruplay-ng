@@ -1,10 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { AuthMode, useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { FormEvent, useEffect, useState } from "react";
+import { AuthMode, useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getAppError } from "@/lib/errors";
 
 interface AuthFormProps {
   mode: AuthMode;
@@ -13,32 +15,40 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [gender, setGender] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [gender, setGender] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [signupStep, setSignupStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const isSignup = mode === 'signup';
-  const stepLabels = ['Account', 'Profile'];
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isSignup = mode === "signup";
+  const stepLabels = ["Account", "Profile"];
 
   useEffect(() => {
     setSignupStep(0);
+    setErrorCode(null);
+    setErrorMessage(null);
   }, [mode]);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setErrorCode(null);
+    setErrorMessage(null);
 
     if (isSignup && signupStep === 0) {
       if (password !== confirmPassword) {
         toast({
-          title: 'Passwords do not match',
-          description: 'Check both password fields and try again.',
+          title: "Passwords do not match",
+          description: "Check both password fields and try again.",
         });
+        setErrorCode("PASSWORDS_DO_NOT_MATCH");
+        setErrorMessage("Check both password fields and try again.");
         return;
       }
 
@@ -48,24 +58,47 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
 
     if (isSignup && password !== confirmPassword) {
       toast({
-        title: 'Passwords do not match',
-        description: 'Check both password fields and try again.',
+        title: "Passwords do not match",
+        description: "Check both password fields and try again.",
       });
+      setErrorCode("PASSWORDS_DO_NOT_MATCH");
+      setErrorMessage("Check both password fields and try again.");
       return;
     }
 
     setIsLoading(true);
 
-    window.setTimeout(() => {
-      login({
-        email,
-        displayName: isSignup ? displayName : undefined,
-        dateOfBirth: isSignup ? dateOfBirth : undefined,
-        gender: isSignup ? gender : undefined,
+    try {
+      if (isSignup) {
+        await signup({
+          email,
+          password,
+          displayName,
+          dateOfBirth,
+          gender,
+        });
+      } else {
+        await login(email, password);
+      }
+
+      toast({
+        title: isSignup ? "Account created" : "Logged in",
+        description: isSignup
+          ? "Your Guruplay account is ready."
+          : "Welcome back to Guruplay.",
       });
-      setIsLoading(false);
       onSuccess?.();
-    }, 500);
+    } catch (error) {
+      const appError = getAppError(error);
+      setErrorCode(appError.code);
+      setErrorMessage(appError.message);
+      toast({
+        title: isSignup ? "Could not create account" : "Could not log in",
+        description: `${appError.code}: ${appError.message}`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -76,16 +109,31 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             <div key={label} className="space-y-2">
               <div
                 className={cn(
-                  'h-1.5 rounded-full transition-colors',
-                  index <= signupStep ? 'bg-primary' : 'bg-white/15'
+                  "h-1.5 rounded-full transition-colors",
+                  index <= signupStep ? "bg-primary" : "bg-white/15",
                 )}
               />
-              <p className={cn('text-xs font-semibold', index === signupStep ? 'text-white' : 'text-muted-foreground')}>
+              <p
+                className={cn(
+                  "text-xs font-semibold",
+                  index === signupStep ? "text-white" : "text-muted-foreground",
+                )}
+              >
                 {label}
               </p>
             </div>
           ))}
         </div>
+      )}
+
+      {errorCode && errorMessage && (
+        <Alert
+          variant="destructive"
+          className="border-destructive/40 bg-destructive/10"
+        >
+          <AlertTitle>{errorCode}</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
       )}
 
       {(!isSignup || signupStep === 0) && (
@@ -123,7 +171,9 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             <Input
               id={`${mode}-password`}
               type="password"
-              placeholder={isSignup ? 'Create a password' : 'Enter your password'}
+              placeholder={
+                isSignup ? "Create a password" : "Enter your password"
+              }
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="bg-[#121212] border-[#3a3a3a] focus:border-foreground"
@@ -195,19 +245,29 @@ const AuthForm = ({ mode, onModeChange, onSuccess }: AuthFormProps) => {
             Back
           </Button>
         )}
-        <Button type="submit" className="flex-1 rounded-full font-semibold" disabled={isLoading}>
-          {isLoading ? 'Please wait...' : isSignup && signupStep === 0 ? 'Continue' : isSignup ? 'Create account' : 'Log in'}
+        <Button
+          type="submit"
+          className="flex-1 rounded-full font-semibold"
+          disabled={isLoading}
+        >
+          {isLoading
+            ? "Please wait..."
+            : isSignup && signupStep === 0
+              ? "Continue"
+              : isSignup
+                ? "Create account"
+                : "Log in"}
         </Button>
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
-        {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
+        {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
         <button
           type="button"
-          onClick={() => onModeChange(isSignup ? 'login' : 'signup')}
+          onClick={() => onModeChange(isSignup ? "login" : "signup")}
           className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"
         >
-          {isSignup ? 'Log in' : 'Sign up'}
+          {isSignup ? "Log in" : "Sign up"}
         </button>
       </p>
     </form>

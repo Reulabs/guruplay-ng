@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { APP_NAME } from '@/config/app';
+import { useEffect } from "react";
+import { APP_NAME } from "@/config/app";
 
 export const useDocumentTitle = (title?: string) => {
   useEffect(() => {

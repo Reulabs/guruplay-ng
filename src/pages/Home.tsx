@@ -1,21 +1,21 @@
-import { Play } from 'lucide-react';
-import { playlists, tracks, artists } from '@/data/mockData';
-import PlaylistCard from '@/components/cards/PlaylistCard';
-import ArtistCard from '@/components/cards/ArtistCard';
-import TrackCard from '@/components/cards/TrackCard';
-import HorizontalScroll from '@/components/sections/HorizontalScroll';
-import { usePlayer } from '@/context/PlayerContext';
-import Typography from '@/components/ui/typography';
-import FeaturedSpotlight from '@/components/sections/FeaturedSpotlight';
+import { Play } from "lucide-react";
+import { playlists, tracks, artists } from "@/data/mockData";
+import PlaylistCard from "@/components/cards/PlaylistCard";
+import ArtistCard from "@/components/cards/ArtistCard";
+import TrackCard from "@/components/cards/TrackCard";
+import HorizontalScroll from "@/components/sections/HorizontalScroll";
+import { usePlayer } from "@/context/PlayerContext";
+import Typography from "@/components/ui/typography";
+import FeaturedSpotlight from "@/components/sections/FeaturedSpotlight";
 
 const Home = () => {
   const { playPlaylist } = usePlayer();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   const quickPicks = playlists.slice(0, 6);
@@ -40,7 +40,11 @@ const Home = () => {
                 alt={playlist.name}
                 className="h-14 w-14 object-cover"
               />
-              <Typography variant="sm" weight="semibold" className="flex-1 truncate pr-2">
+              <Typography
+                variant="sm"
+                weight="semibold"
+                className="flex-1 truncate pr-2"
+              >
                 {playlist.name}
               </Typography>
               <div className="pr-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -67,7 +71,12 @@ const Home = () => {
         </Typography>
         <div className="rounded-xl border border-white/5 bg-white/[0.04] p-1">
           {tracks.slice(0, 5).map((track, index) => (
-            <TrackCard key={track.id} track={track} index={index + 1} showIndex />
+            <TrackCard
+              key={track.id}
+              track={track}
+              index={index + 1}
+              showIndex
+            />
           ))}
         </div>
       </section>
@@ -81,11 +90,14 @@ const Home = () => {
       </HorizontalScroll>
 
       <HorizontalScroll title="New Releases">
-        {playlists.slice().reverse().map((playlist) => (
-          <div key={playlist.id} className="min-w-[180px] max-w-[180px]">
-            <PlaylistCard playlist={playlist} />
-          </div>
-        ))}
+        {playlists
+          .slice()
+          .reverse()
+          .map((playlist) => (
+            <div key={playlist.id} className="min-w-[180px] max-w-[180px]">
+              <PlaylistCard playlist={playlist} />
+            </div>
+          ))}
       </HorizontalScroll>
     </div>
   );

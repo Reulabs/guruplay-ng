@@ -1,12 +1,12 @@
-import { Home, Search, Library } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { Home, Search, Library } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const MobileNav = () => {
   const navItems = [
-    { icon: Home, label: 'Home', path: '/' },
-    { icon: Search, label: 'Search', path: '/search' },
-    { icon: Library, label: 'Library', path: '/library' },
+    { icon: Home, label: "Home", path: "/" },
+    { icon: Search, label: "Search", path: "/search" },
+    { icon: Library, label: "Library", path: "/library" },
   ];
 
   return (
@@ -18,8 +18,8 @@ const MobileNav = () => {
               to={item.path}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-1 px-6 py-2 text-xs transition-colors',
-                  isActive ? 'text-foreground' : 'text-muted-foreground'
+                  "flex flex-col items-center gap-1 px-6 py-2 text-xs transition-colors",
+                  isActive ? "text-foreground" : "text-muted-foreground",
                 )
               }
             >

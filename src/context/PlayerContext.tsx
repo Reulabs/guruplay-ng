@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
-import { Track } from '@/data/mockData';
-import { useAuth } from '@/context/AuthContext';
-import { useRequireAuth } from '@/hooks/use-require-auth';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
+import { Track } from "@/data/mockData";
+import { useAuth } from "@/context/AuthContext";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -11,7 +18,7 @@ interface PlayerContextType {
   volume: number;
   queue: Track[];
   shuffle: boolean;
-  repeat: 'off' | 'all' | 'one';
+  repeat: "off" | "all" | "one";
   play: (track?: Track) => void;
   pause: () => void;
   toggle: () => void;
@@ -32,12 +39,14 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 export const usePlayer = () => {
   const context = useContext(PlayerContext);
   if (!context) {
-    throw new Error('usePlayer must be used within a PlayerProvider');
+    throw new Error("usePlayer must be used within a PlayerProvider");
   }
   return context;
 };
 
-export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated } = useAuth();
   const requireAuth = useRequireAuth();
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -47,15 +56,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [volume, setVolumeState] = useState(0.7);
   const [queue, setQueue] = useState<Track[]>([]);
   const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off');
+  const [repeat, setRepeat] = useState<"off" | "all" | "one">("off");
   const [originalQueue, setOriginalQueue] = useState<Track[]>([]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const requireLogin = useCallback(() => {
     const canPlay = requireAuth({
-      title: 'Log in to listen',
-      description: 'You need to be logged in before playing songs.',
+      title: "Log in to listen",
+      description: "You need to be logged in before playing songs.",
     });
 
     if (!canPlay) {
@@ -83,7 +92,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const handleEnded = () => {
-      if (repeat === 'one') {
+      if (repeat === "one") {
         audio.currentTime = 0;
         audio.play();
       } else {
@@ -91,14 +100,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("ended", handleEnded);
       audio.pause();
     };
   }, []);
@@ -125,21 +134,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [isAuthenticated]);
 
-  const play = useCallback((track?: Track) => {
-    if (!requireLogin()) return;
+  const play = useCallback(
+    (track?: Track) => {
+      if (!requireLogin()) return;
 
-    if (track) {
-      setCurrentTrack(track);
-      setIsPlaying(true);
-      if (audioRef.current) {
-        audioRef.current.src = track.audioUrl;
+      if (track) {
+        setCurrentTrack(track);
+        setIsPlaying(true);
+        if (audioRef.current) {
+          audioRef.current.src = track.audioUrl;
+          audioRef.current.play().catch(console.error);
+        }
+      } else if (currentTrack && audioRef.current) {
         audioRef.current.play().catch(console.error);
+        setIsPlaying(true);
       }
-    } else if (currentTrack && audioRef.current) {
-      audioRef.current.play().catch(console.error);
-      setIsPlaying(true);
-    }
-  }, [currentTrack, requireLogin]);
+    },
+    [currentTrack, requireLogin],
+  );
 
   const pause = useCallback(() => {
     if (audioRef.current) {
@@ -160,16 +172,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!requireLogin()) return;
 
     if (queue.length === 0) {
-      if (repeat === 'all' && originalQueue.length > 0) {
-        setQueue(shuffle ? shuffleArray([...originalQueue]) : [...originalQueue]);
-        const nextTrack = shuffle ? shuffleArray([...originalQueue])[0] : originalQueue[0];
+      if (repeat === "all" && originalQueue.length > 0) {
+        setQueue(
+          shuffle ? shuffleArray([...originalQueue]) : [...originalQueue],
+        );
+        const nextTrack = shuffle
+          ? shuffleArray([...originalQueue])[0]
+          : originalQueue[0];
         play(nextTrack);
       }
       return;
     }
 
     const nextTrack = queue[0];
-    setQueue(prev => prev.slice(1));
+    setQueue((prev) => prev.slice(1));
     play(nextTrack);
   }, [queue, repeat, originalQueue, shuffle, play, requireLogin]);
 
@@ -196,42 +212,45 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const addToQueue = useCallback((track: Track) => {
-    setQueue(prev => [...prev, track]);
+    setQueue((prev) => [...prev, track]);
   }, []);
 
   const removeFromQueue = useCallback((trackId: string) => {
-    setQueue(prev => prev.filter(t => t.id !== trackId));
+    setQueue((prev) => prev.filter((t) => t.id !== trackId));
   }, []);
 
   const clearQueue = useCallback(() => {
     setQueue([]);
   }, []);
 
-  const playPlaylist = useCallback((tracks: Track[], startIndex = 0) => {
-    if (!requireLogin()) return;
-    if (tracks.length === 0) return;
+  const playPlaylist = useCallback(
+    (tracks: Track[], startIndex = 0) => {
+      if (!requireLogin()) return;
+      if (tracks.length === 0) return;
 
-    const tracksToPlay = shuffle ? shuffleArray([...tracks]) : [...tracks];
-    setOriginalQueue(tracks);
-    
-    const firstTrack = shuffle ? tracksToPlay[0] : tracks[startIndex];
-    const remainingTracks = shuffle 
-      ? tracksToPlay.slice(1) 
-      : [...tracks.slice(startIndex + 1), ...tracks.slice(0, startIndex)];
-    
-    setQueue(remainingTracks);
-    play(firstTrack);
-  }, [shuffle, play, requireLogin]);
+      const tracksToPlay = shuffle ? shuffleArray([...tracks]) : [...tracks];
+      setOriginalQueue(tracks);
+
+      const firstTrack = shuffle ? tracksToPlay[0] : tracks[startIndex];
+      const remainingTracks = shuffle
+        ? tracksToPlay.slice(1)
+        : [...tracks.slice(startIndex + 1), ...tracks.slice(0, startIndex)];
+
+      setQueue(remainingTracks);
+      play(firstTrack);
+    },
+    [shuffle, play, requireLogin],
+  );
 
   const toggleShuffle = useCallback(() => {
-    setShuffle(prev => !prev);
+    setShuffle((prev) => !prev);
   }, []);
 
   const toggleRepeat = useCallback(() => {
-    setRepeat(prev => {
-      if (prev === 'off') return 'all';
-      if (prev === 'all') return 'one';
-      return 'off';
+    setRepeat((prev) => {
+      if (prev === "off") return "all";
+      if (prev === "all") return "one";
+      return "off";
     });
   }, []);
 
@@ -260,9 +279,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <PlayerContext.Provider value={value}>
-      {children}
-    </PlayerContext.Provider>
+    <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
   );
 };
 

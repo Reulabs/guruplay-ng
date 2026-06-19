@@ -1,5 +1,5 @@
-import { TrendingUp, Music } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, Music } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Song {
   id: string;
@@ -32,7 +32,10 @@ const TopSongsTable = ({ songs }: TopSongsTableProps) => {
         ) : (
           <div className="space-y-3">
             {songs.map((song, index) => (
-              <div key={song.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <div
+                key={song.id}
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              >
                 <div className="w-8 text-center font-bold text-muted-foreground">
                   #{index + 1}
                 </div>
@@ -43,10 +46,14 @@ const TopSongsTable = ({ songs }: TopSongsTableProps) => {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{song.title}</p>
-                  <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {song.artist}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{song.total_plays.toLocaleString()}</p>
+                  <p className="font-semibold">
+                    {song.total_plays.toLocaleString()}
+                  </p>
                   <p className="text-xs text-muted-foreground">plays</p>
                 </div>
               </div>
