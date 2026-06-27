@@ -43,7 +43,7 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
               Where emerging voices find their stage
             </Typography>
           </div>
-
+{/* 
           <div className="max-w-xl justify-self-end">
             <Typography
               variant="title"
@@ -62,7 +62,7 @@ const FeaturedSpotlight = ({ tracks }: FeaturedSpotlightProps) => {
               <Play className="h-5 w-5 fill-current" />
               Listen Now
             </Button>
-          </div>
+          </div> */}
         </div>
 
         <img

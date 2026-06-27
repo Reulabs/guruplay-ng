@@ -22,7 +22,7 @@ const Home = () => {
 
   return (
     <div className="space-y-10 p-4 pb-28 md:p-8">
-      <FeaturedSpotlight tracks={tracks} />
+      {/* <FeaturedSpotlight tracks={tracks} /> */}
 
       <div>
         <Typography as="h1" variant="2xl" weight="bold" className="mb-6">

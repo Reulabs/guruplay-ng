@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import AuthForm from "@/components/auth/AuthForm";
 import Typography from "@/components/ui/typography";
+import { DefaultLogo } from "../misc/logo";
 
 const copy: Record<AuthMode, { title: string; description: string }> = {
   login: {
@@ -36,9 +37,7 @@ const AuthDialog = () => {
     >
       <DialogContent className="max-w-md border-white/10 bg-[#080808] p-6 text-white shadow-2xl sm:rounded-2xl">
         <DialogHeader className="items-center text-center">
-          <div className="mb-2 grid h-12 w-12 place-items-center rounded-full bg-primary">
-            <Music2 className="h-6 w-6 text-primary-foreground" />
-          </div>
+         <DefaultLogo/>
           <DialogTitle asChild>
             <Typography as="h2" variant="h2" weight="bold" align="center">
               {activeCopy.title}
