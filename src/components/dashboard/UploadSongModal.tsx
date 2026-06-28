@@ -8,7 +8,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Upload, Image, Music, X } from "lucide-react";
 
 interface UploadSongModalProps {
@@ -18,11 +17,9 @@ interface UploadSongModalProps {
   onUpload: (song: {
     name: string;
     artist: string;
-    album: string;
     genre: string;
-    description: string;
-    coverUrl: string;
-    audioFile: File | null;
+    coverFile: File | null;
+    audioFile: File;
   }) => Promise<void>;
 }
 
@@ -35,11 +32,10 @@ const UploadSongModal = ({
   const [formData, setFormData] = useState({
     name: "",
     artist: "",
-    album: "",
     genre: "",
-    description: "",
   });
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +52,7 @@ const UploadSongModal = ({
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setCoverFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setCoverPreview(reader.result as string);
@@ -76,24 +73,27 @@ const UploadSongModal = ({
     setIsUploading(true);
     setError(null);
 
+    if (!audioFile) {
+      setError("Choose an audio file before uploading.");
+      setIsUploading(false);
+      return;
+    }
+
     try {
       await onUpload({
         name: formData.name,
         artist: formData.artist || artistName,
-        album: formData.album,
         genre: formData.genre,
-        description: formData.description,
-        coverUrl: coverPreview || "",
+        coverFile,
         audioFile,
       });
       setFormData({
         name: "",
         artist: "",
-        album: "",
         genre: "",
-        description: "",
       });
       setCoverPreview(null);
+      setCoverFile(null);
       setAudioFile(null);
       onClose();
     } catch (uploadError) {
@@ -111,11 +111,10 @@ const UploadSongModal = ({
     setFormData({
       name: "",
       artist: "",
-      album: "",
       genre: "",
-      description: "",
     });
     setCoverPreview(null);
+    setCoverFile(null);
     setAudioFile(null);
     setError(null);
   };
@@ -156,6 +155,7 @@ const UploadSongModal = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setCoverPreview(null);
+                      setCoverFile(null);
                     }}
                     className="absolute top-2 right-2 w-6 h-6 bg-background/80 rounded-full flex items-center justify-center hover:bg-background"
                   >
@@ -252,18 +252,6 @@ const UploadSongModal = ({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="album">Album</Label>
-              <Input
-                id="album"
-                name="album"
-                value={formData.album}
-                onChange={handleChange}
-                placeholder="Album name (optional)"
-                className="bg-muted/30 border-border"
-              />
-            </div>
-
             <div className="space-y-2 col-span-2">
               <Label htmlFor="genre">Genre</Label>
               <Input
@@ -273,19 +261,6 @@ const UploadSongModal = ({
                 onChange={handleChange}
                 placeholder="e.g., Pop, Rock, Hip-Hop"
                 className="bg-muted/30 border-border"
-              />
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Tell listeners about your song..."
-                className="bg-muted/30 border-border resize-none"
-                rows={3}
               />
             </div>
           </div>

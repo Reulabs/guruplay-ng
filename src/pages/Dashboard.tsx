@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
   Clock,
-  Eye,
   Heart,
   Loader2,
   LogOut,
@@ -41,7 +40,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import Typography from "@/components/ui/typography";
 import { useToast } from "@/hooks/use-toast";
-import { genres } from "@/data/mockData";
+import { MUSIC_GENRES } from "@/config/music";
+import EmptyState from "@/components/fallbacks/EmptyState";
 
 interface UploadedSong {
   id: string;
@@ -51,6 +51,7 @@ interface UploadedSong {
   plays: number;
   likes: number;
   uploadedAt: string;
+  approvalStatus: "pending" | "approved" | "rejected";
 }
 
 interface DashboardMetrics {
@@ -109,7 +110,8 @@ const Dashboard = () => {
   const isApprovedArtist =
     currentUserType === UserType.Artist &&
     artistProfile?.approval_status === ArtistApprovalStatus.Approved;
-  const canUpload = Boolean(isApprovedArtist);
+  const isAdmin = currentUserType === UserType.Admin;
+  const canUpload = Boolean(isApprovedArtist || isAdmin);
 
   const loadDashboardData = useCallback(async () => {
     if (!user || !isSupabaseConfigured) {
@@ -160,9 +162,11 @@ const Dashboard = () => {
     setArtistProfile(nextProfile);
 
     if (
-      !nextProfile ||
-      nextProfile.approval_status !== ArtistApprovalStatus.Approved ||
-      nextUserType !== UserType.Artist
+      !(
+        nextUserType === UserType.Admin ||
+        (nextProfile?.approval_status === ArtistApprovalStatus.Approved &&
+          nextUserType === UserType.Artist)
+      )
     ) {
       setUploadedSongs([]);
       setMetrics(emptyMetrics);
@@ -201,6 +205,7 @@ const Dashboard = () => {
         plays: song.total_plays || 0,
         likes: song.total_likes || 0,
         uploadedAt: new Date(song.created_at).toISOString().split("T")[0],
+        approvalStatus: song.approval_status,
       })),
     );
 
@@ -349,35 +354,71 @@ const Dashboard = () => {
   const handleSongUploaded = async (song: {
     name: string;
     artist: string;
-    album: string;
     genre: string;
-    description: string;
-    coverUrl: string;
-    audioFile: File | null;
+    coverFile: File | null;
+    audioFile: File;
   }) => {
-    if (!user || !artistProfile || !canUpload) {
-      throw new Error("Only approved artists can upload songs.");
+    if (!user || !canUpload) {
+      throw new Error("Only approved artists and admins can upload songs.");
     }
 
-    const { error } = await supabase.from("songs").insert({
-      user_id: user.id,
-      title: song.name,
-      artist: song.artist || artistProfile.artist_name,
-      cover_url: song.coverUrl,
-      audio_url: song.audioFile ? song.audioFile.name : "",
-      duration: 0,
-      genre: song.genre,
-      total_plays: 0,
-      total_likes: 0,
-    });
+    const safeName = (name: string) => name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const audioPath = `${user.id}/${crypto.randomUUID()}-${safeName(song.audioFile.name)}`;
+    const coverPath = song.coverFile
+      ? `${user.id}/${crypto.randomUUID()}-${safeName(song.coverFile.name)}`
+      : null;
 
-    if (error) {
-      throw getAppError(error);
+    const { error: audioError } = await supabase.storage
+      .from("song-audio")
+      .upload(audioPath, song.audioFile, { contentType: song.audioFile.type });
+    if (audioError) throw getAppError(audioError);
+
+    let coverUrl = "";
+    try {
+      if (song.coverFile && coverPath) {
+        const { error: coverError } = await supabase.storage
+          .from("song-covers")
+          .upload(coverPath, song.coverFile, {
+            contentType: song.coverFile.type,
+          });
+        if (coverError) throw getAppError(coverError);
+        coverUrl = supabase.storage.from("song-covers").getPublicUrl(coverPath)
+          .data.publicUrl;
+      }
+
+      const audioUrl = supabase.storage
+        .from("song-audio")
+        .getPublicUrl(audioPath).data.publicUrl;
+      const { error } = await supabase.from("songs").insert({
+        user_id: user.id,
+        title: song.name,
+        artist:
+          song.artist ||
+          artistProfile?.artist_name ||
+          user.displayName ||
+          "Guruplay artist",
+        cover_url: coverUrl,
+        audio_url: audioUrl,
+        duration: 0,
+        genre: song.genre,
+        total_plays: 0,
+        total_likes: 0,
+        approval_status: isAdmin ? "approved" : "pending",
+      });
+
+      if (error) throw getAppError(error);
+    } catch (uploadError) {
+      await supabase.storage.from("song-audio").remove([audioPath]);
+      if (coverPath)
+        await supabase.storage.from("song-covers").remove([coverPath]);
+      throw uploadError;
     }
 
     toast({
-      title: "Song uploaded",
-      description: `${song.name} was added to your artist catalog.`,
+      title: isAdmin ? "Song published" : "Song submitted for review",
+      description: isAdmin
+        ? `${song.name} is now public.`
+        : `${song.name} will become public after admin approval.`,
     });
     loadDashboardData();
   };
@@ -535,9 +576,9 @@ const Dashboard = () => {
                   <SelectValue placeholder="Select genre" />
                 </SelectTrigger>
                 <SelectContent className="border-white/10 bg-neutral-950 text-white">
-                  {genres.map((genre) => (
-                    <SelectItem key={genre.id} value={genre.name}>
-                      {genre.name}
+                  {MUSIC_GENRES.map((genre) => (
+                    <SelectItem key={genre} value={genre}>
+                      {genre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -699,28 +740,6 @@ const Dashboard = () => {
               }))}
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <MetricCard
-              title="Uploaded Songs"
-              value={metrics.totalSongs}
-              icon={Music}
-              subtitle="total tracks"
-              iconColor="text-primary"
-            />
-            <MetricCard
-              title="Profile Views"
-              value={0}
-              icon={Eye}
-              iconColor="text-green-500"
-            />
-            <MetricCard
-              title="Engagement Rate"
-              value="0%"
-              icon={TrendingUp}
-              iconColor="text-orange-500"
-            />
-          </div>
         </TabsContent>
 
         <TabsContent value="songs" className="space-y-6">
@@ -734,22 +753,13 @@ const Dashboard = () => {
           </div>
 
           {uploadedSongs.length === 0 ? (
-            <div className="text-center py-16 bg-card rounded-lg border border-border">
-              <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                No songs uploaded yet
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Start sharing your music with the world
-              </p>
-              <Button
-                onClick={() => setIsUploadOpen(true)}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Upload Your First Song
-              </Button>
-            </div>
+            <EmptyState
+              icon={Music}
+              title="No songs uploaded yet"
+              description="Upload your first song to start building your catalog."
+              actionLabel="Upload your first song"
+              onAction={() => setIsUploadOpen(true)}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {uploadedSongs.map((song) => (
@@ -772,6 +782,7 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">{song.artist}</p>
                   <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                     <span>{song.plays.toLocaleString()} plays</span>
+                    <span className="capitalize">{song.approvalStatus}</span>
                     <span>{song.uploadedAt}</span>
                   </div>
                 </div>
@@ -831,11 +842,11 @@ const Dashboard = () => {
         )}
       </main>
 
-      {artistProfile && (
+      {canUpload && (
         <UploadSongModal
           isOpen={isUploadOpen}
           onClose={() => setIsUploadOpen(false)}
-          artistName={artistProfile.artist_name}
+          artistName={artistProfile?.artist_name || user?.displayName || ""}
           onUpload={handleSongUploaded}
         />
       )}

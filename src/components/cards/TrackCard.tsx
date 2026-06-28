@@ -1,5 +1,5 @@
 import { Play, Pause, MoreHorizontal } from "lucide-react";
-import { Track } from "@/data/mockData";
+import { Track } from "@/types/music";
 import { usePlayer } from "@/context/PlayerContext";
 import { cn } from "@/lib/utils";
 
@@ -65,11 +65,15 @@ const TrackCard = ({ track, index, showIndex = false }: TrackCardProps) => {
 
       {/* Cover & Info */}
       <div className="flex items-center gap-3 min-w-0">
-        <img
-          src={track.coverUrl}
-          alt={track.title}
-          className="h-10 w-10 rounded object-cover"
-        />
+        {track.coverUrl ? (
+          <img
+            src={track.coverUrl}
+            alt={track.title}
+            className="h-10 w-10 rounded object-cover"
+          />
+        ) : (
+          <div className="h-10 w-10 rounded bg-white/[0.06]" aria-hidden />
+        )}
         <div className="min-w-0">
           <p
             className={cn(
@@ -87,7 +91,7 @@ const TrackCard = ({ track, index, showIndex = false }: TrackCardProps) => {
 
       {/* Album */}
       <p className="hidden md:block text-sm text-muted-foreground truncate hover:underline hover:text-foreground">
-        {track.album}
+        {track.genre || "Uncategorized"}
       </p>
 
       {/* Duration & More */}

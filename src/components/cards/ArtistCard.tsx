@@ -1,17 +1,18 @@
 import { Play } from "lucide-react";
-import { Artist, tracks } from "@/data/mockData";
+import { Artist, Track } from "@/types/music";
 import { usePlayer } from "@/context/PlayerContext";
 import { useNavigate } from "react-router-dom";
 
 interface ArtistCardProps {
   artist: Artist;
+  tracks: Track[];
 }
 
-const ArtistCard = ({ artist }: ArtistCardProps) => {
+const ArtistCard = ({ artist, tracks }: ArtistCardProps) => {
   const { playPlaylist } = usePlayer();
   const navigate = useNavigate();
 
-  const artistTracks = tracks.filter((t) => t.artist === artist.name);
+  const artistTracks = tracks.filter((track) => track.userId === artist.userId);
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -26,11 +27,18 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
       className="group p-4 rounded-md bg-card hover:bg-secondary/80 transition-all duration-300 cursor-pointer"
     >
       <div className="relative mb-4">
-        <img
-          src={artist.imageUrl}
-          alt={artist.name}
-          className="w-full aspect-square rounded-full object-cover shadow-lg"
-        />
+        {artist.imageUrl ? (
+          <img
+            src={artist.imageUrl}
+            alt={artist.name}
+            className="w-full aspect-square rounded-full object-cover shadow-lg"
+          />
+        ) : (
+          <div
+            className="aspect-square w-full rounded-full bg-white/[0.06]"
+            aria-hidden
+          />
+        )}
         <button
           onClick={handlePlay}
           className="absolute bottom-2 right-2 p-3 rounded-full bg-primary text-primary-foreground shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"

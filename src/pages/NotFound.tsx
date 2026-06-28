@@ -1,35 +1,20 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import Typography from "@/components/ui/typography";
+import { useNavigate } from "react-router-dom";
+import { MapPinOff } from "lucide-react";
+import EmptyState from "@/components/fallbacks/EmptyState";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname,
-    );
-  }, [location.pathname]);
+  const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <Typography
-          as="h1"
-          variant="display"
-          weight="bold"
-          align="center"
-          className="mb-4"
-        >
-          404
-        </Typography>
-        <Typography variant="h3" tone="muted" align="center" className="mb-4">
-          Oops! Page not found
-        </Typography>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+    <div className="grid min-h-screen place-items-center bg-background p-6">
+      <div className="w-full max-w-xl">
+        <EmptyState
+          icon={MapPinOff}
+          title="Page not found"
+          description="The page you requested does not exist or has moved."
+          actionLabel="Return home"
+          onAction={() => navigate("/")}
+        />
       </div>
     </div>
   );

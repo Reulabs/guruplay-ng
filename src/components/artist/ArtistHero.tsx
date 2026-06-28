@@ -6,38 +6,30 @@ import {
   MoreHorizontal,
   Plus,
 } from "lucide-react";
-import { Artist, Album, Track } from "@/data/mockData";
+import { Artist, Track } from "@/types/music";
 import { Button } from "@/components/ui/button";
 import Typography from "@/components/ui/typography";
 
 interface ArtistHeroProps {
   artist: Artist;
   tracks: Track[];
-  albums: Album[];
   onPlay: () => void;
   onShuffle?: () => void;
 }
 
-const getListenerCount = (tracks: Track[]) =>
-  Math.max(tracks.length * 347291, 1200);
-
-const ArtistHero = ({
-  artist,
-  tracks,
-  albums,
-  onPlay,
-  onShuffle,
-}: ArtistHeroProps) => {
+const ArtistHero = ({ artist, tracks, onPlay, onShuffle }: ArtistHeroProps) => {
   return (
     <section className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
       <div className="relative min-h-[420px] p-6 md:p-10">
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-black/10" />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black to-transparent" />
-        <img
-          src={artist.imageUrl}
-          alt={artist.name}
-          className="absolute inset-y-0 right-0 h-full w-full object-cover opacity-55 md:w-[72%]"
-        />
+        {artist.imageUrl && (
+          <img
+            src={artist.imageUrl}
+            alt={artist.name}
+            className="absolute inset-y-0 right-0 h-full w-full object-cover opacity-55 md:w-[72%]"
+          />
+        )}
         <div className="relative z-10 flex min-h-[340px] max-w-3xl flex-col justify-end">
           <Typography variant="eyebrow" weight="bold" className="text-white/55">
             Verified artist
@@ -51,8 +43,7 @@ const ArtistHero = ({
             {artist.name}
           </Typography>
           <Typography variant="title" className="mt-3 max-w-xl text-white/70">
-            {artist.genres.join(" / ")} artist with{" "}
-            {getListenerCount(tracks).toLocaleString()} monthly listeners.
+            {artist.bio || artist.genres.join(" / ")}
           </Typography>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
@@ -92,8 +83,13 @@ const ArtistHero = ({
             </div>
           </div>
           <div className="mt-6 flex gap-3 text-sm text-white/55">
-            <span>{tracks.length} top tracks</span>
-            <span>{albums.length} albums</span>
+            <span>{tracks.length} published tracks</span>
+            <span>
+              {tracks
+                .reduce((sum, track) => sum + track.totalPlays, 0)
+                .toLocaleString()}{" "}
+              plays
+            </span>
           </div>
         </div>
       </div>

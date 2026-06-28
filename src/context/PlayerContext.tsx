@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Track } from "@/data/mockData";
+import { Track } from "@/types/music";
 import { useAuth } from "@/context/AuthContext";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 

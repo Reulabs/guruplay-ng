@@ -6,6 +6,7 @@ import {
   Disc3,
   Loader2,
   Music2,
+  Plus,
   Shield,
   Trash2,
   UserCheck,
@@ -19,12 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import Typography from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -42,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import EmptyTableRow from "@/components/fallbacks/EmptyTableRow";
 
 const statusTone: Record<string, string> = {
   approved: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
@@ -74,6 +71,7 @@ const Admin = () => {
     activity,
     refresh,
     updateArtistStatus,
+    updateSongStatus,
     deleteSong,
   } = useAdmin();
   const { toast } = useToast();
@@ -127,7 +125,10 @@ const Admin = () => {
     try {
       await updateArtistStatus(profileId, status);
       toast({
-        title: status === ArtistApprovalStatus.Approved ? "Artist approved" : "Artist rejected",
+        title:
+          status === ArtistApprovalStatus.Approved
+            ? "Artist approved"
+            : "Artist rejected",
         description: "The artist profile has been updated.",
       });
     } catch (actionError) {
@@ -161,6 +162,33 @@ const Admin = () => {
           actionError instanceof Error
             ? actionError.message
             : "Could not delete song.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleSongAction = async (
+    songId: string,
+    status: "approved" | "rejected",
+  ) => {
+    setBusyId(songId);
+    try {
+      await updateSongStatus(songId, status);
+      toast({
+        title: status === "approved" ? "Song approved" : "Song rejected",
+        description:
+          status === "approved"
+            ? "The song is now visible in the public catalog."
+            : "The song remains hidden from public listings.",
+      });
+    } catch (actionError) {
+      toast({
+        title: "Action failed",
+        description:
+          actionError instanceof Error
+            ? actionError.message
+            : "Could not update song status.",
       });
     } finally {
       setBusyId(null);
@@ -248,27 +276,40 @@ const Admin = () => {
               </Typography>
             </div>
           </Link>
-          <Button
-            variant="outline"
-            className="rounded-full border-white/10 bg-white/[0.04]"
-            onClick={refresh}
-          >
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild className="rounded-full">
+              <Link to="/dashboard">
+                <Plus className="mr-1 h-4 w-4" />
+                Upload song
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-full border-white/10 bg-white/[0.04]"
+              onClick={refresh}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <Typography variant="eyebrow" weight="bold" className="text-white/45">
+            <Typography
+              variant="eyebrow"
+              weight="bold"
+              className="text-white/45"
+            >
               Operations
             </Typography>
             <Typography as="h1" variant="h1" weight="bold" className="mt-2">
               Admin dashboard
             </Typography>
             <Typography variant="body" tone="muted" className="mt-2">
-              Manage users, artist approvals, catalog content, and platform activity.
+              Manage users, artist approvals, catalog content, and platform
+              activity.
             </Typography>
           </div>
         </div>
@@ -284,7 +325,12 @@ const Admin = () => {
                   <Typography variant="body-sm" className="text-white/45">
                     {metric.label}
                   </Typography>
-                  <Typography as="p" variant="h2" weight="bold" className="mt-2">
+                  <Typography
+                    as="p"
+                    variant="h2"
+                    weight="bold"
+                    className="mt-2"
+                  >
                     {metric.value}
                   </Typography>
                 </div>
@@ -328,13 +374,18 @@ const Admin = () => {
                             <Typography variant="body-sm" weight="bold">
                               {artist.artist_name}
                             </Typography>
-                            <Typography variant="caption" className="text-white/45">
+                            <Typography
+                              variant="caption"
+                              className="text-white/45"
+                            >
                               {artist.location || "No location"}
                             </Typography>
                           </div>
                         </TableCell>
                         <TableCell>{artist.genre}</TableCell>
-                        <TableCell>{renderStatus(artist.approval_status)}</TableCell>
+                        <TableCell>
+                          {renderStatus(artist.approval_status)}
+                        </TableCell>
                         <TableCell>{formatDate(artist.created_at)}</TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
@@ -343,7 +394,8 @@ const Admin = () => {
                               className="rounded-full"
                               disabled={
                                 busyId === artist.id ||
-                                artist.approval_status === ArtistApprovalStatus.Approved
+                                artist.approval_status ===
+                                  ArtistApprovalStatus.Approved
                               }
                               onClick={() =>
                                 handleArtistAction(
@@ -361,7 +413,8 @@ const Admin = () => {
                               className="rounded-full border-white/10"
                               disabled={
                                 busyId === artist.id ||
-                                artist.approval_status === ArtistApprovalStatus.Rejected
+                                artist.approval_status ===
+                                  ArtistApprovalStatus.Rejected
                               }
                               onClick={() =>
                                 handleArtistAction(
@@ -378,11 +431,10 @@ const Admin = () => {
                       </TableRow>
                     ))}
                     {artists.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="py-10 text-center text-white/45">
-                          No artist applications yet.
-                        </TableCell>
-                      </TableRow>
+                      <EmptyTableRow
+                        colSpan={5}
+                        message="No artist applications yet."
+                      />
                     )}
                   </TableBody>
                 </Table>
@@ -419,11 +471,7 @@ const Admin = () => {
                       </TableRow>
                     ))}
                     {users.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="py-10 text-center text-white/45">
-                          No users found.
-                        </TableCell>
-                      </TableRow>
+                      <EmptyTableRow colSpan={5} message="No users found." />
                     )}
                   </TableBody>
                 </Table>
@@ -442,6 +490,7 @@ const Admin = () => {
                     <TableRow>
                       <TableHead>Song</TableHead>
                       <TableHead>Genre</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Plays</TableHead>
                       <TableHead>Uploaded</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -467,17 +516,54 @@ const Admin = () => {
                               <Typography variant="body-sm" weight="bold">
                                 {song.title}
                               </Typography>
-                              <Typography variant="caption" className="text-white/45">
+                              <Typography
+                                variant="caption"
+                                className="text-white/45"
+                              >
                                 {song.artist || "Unknown artist"}
                               </Typography>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>{song.genre || "Unassigned"}</TableCell>
-                        <TableCell>{song.total_plays.toLocaleString()}</TableCell>
+                        <TableCell>
+                          {renderStatus(song.approval_status)}
+                        </TableCell>
+                        <TableCell>
+                          {song.total_plays.toLocaleString()}
+                        </TableCell>
                         <TableCell>{formatDate(song.created_at)}</TableCell>
                         <TableCell>
-                          <div className="flex justify-end">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              className="rounded-full"
+                              disabled={
+                                busyId === song.id ||
+                                song.approval_status === "approved"
+                              }
+                              onClick={() =>
+                                handleSongAction(song.id, "approved")
+                              }
+                            >
+                              <Check className="mr-1 h-4 w-4" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="rounded-full border-white/10"
+                              disabled={
+                                busyId === song.id ||
+                                song.approval_status === "rejected"
+                              }
+                              onClick={() =>
+                                handleSongAction(song.id, "rejected")
+                              }
+                            >
+                              <X className="mr-1 h-4 w-4" />
+                              Reject
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -497,11 +583,7 @@ const Admin = () => {
                       </TableRow>
                     ))}
                     {songs.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="py-10 text-center text-white/45">
-                          No songs found.
-                        </TableCell>
-                      </TableRow>
+                      <EmptyTableRow colSpan={6} message="No songs found." />
                     )}
                   </TableBody>
                 </Table>
@@ -527,11 +609,16 @@ const Admin = () => {
                   <TableBody>
                     {activity.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{renderStatus(item.activity_type)}</TableCell>
+                        <TableCell>
+                          {renderStatus(item.activity_type)}
+                        </TableCell>
                         <TableCell>
                           {item.songs?.title || "Unknown song"}
                           {item.songs?.artist && (
-                            <span className="text-white/45"> by {item.songs.artist}</span>
+                            <span className="text-white/45">
+                              {" "}
+                              by {item.songs.artist}
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="font-mono text-xs text-white/55">
@@ -541,11 +628,10 @@ const Admin = () => {
                       </TableRow>
                     ))}
                     {activity.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-10 text-center text-white/45">
-                          No recent activity.
-                        </TableCell>
-                      </TableRow>
+                      <EmptyTableRow
+                        colSpan={4}
+                        message="No recent activity."
+                      />
                     )}
                   </TableBody>
                 </Table>
@@ -555,7 +641,10 @@ const Admin = () => {
         </Tabs>
       </main>
 
-      <Dialog open={Boolean(deleteTarget)} onOpenChange={() => setDeleteTarget(null)}>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={() => setDeleteTarget(null)}
+      >
         <DialogContent className="border-white/10 bg-neutral-950 text-white">
           <DialogHeader>
             <DialogTitle>Remove song</DialogTitle>

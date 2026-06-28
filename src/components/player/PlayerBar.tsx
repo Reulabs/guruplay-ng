@@ -53,11 +53,15 @@ const PlayerBar = () => {
       <div className="h-full px-4 flex items-center justify-between gap-4">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0 w-[30%]">
-          <img
-            src={currentTrack.coverUrl}
-            alt={currentTrack.title}
-            className="h-14 w-14 rounded-lg object-cover shadow-lg"
-          />
+          {currentTrack.coverUrl ? (
+            <img
+              src={currentTrack.coverUrl}
+              alt={currentTrack.title}
+              className="h-14 w-14 rounded-lg object-cover shadow-lg"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-lg bg-white/[0.06]" aria-hidden />
+          )}
           <div className="min-w-0">
             <p className="text-sm font-medium truncate hover:underline cursor-pointer">
               {currentTrack.title}

@@ -1,104 +1,104 @@
-import { Play } from "lucide-react";
-import { playlists, tracks, artists } from "@/data/mockData";
-import PlaylistCard from "@/components/cards/PlaylistCard";
+import { Music2 } from "lucide-react";
 import ArtistCard from "@/components/cards/ArtistCard";
 import TrackCard from "@/components/cards/TrackCard";
+import EmptyState from "@/components/fallbacks/EmptyState";
+import ErrorState from "@/components/fallbacks/ErrorState";
+import LoadingState from "@/components/fallbacks/LoadingState";
 import HorizontalScroll from "@/components/sections/HorizontalScroll";
-import { usePlayer } from "@/context/PlayerContext";
 import Typography from "@/components/ui/typography";
-import FeaturedSpotlight from "@/components/sections/FeaturedSpotlight";
+import { useCatalog } from "@/hooks/use-catalog";
 
 const Home = () => {
-  const { playPlaylist } = usePlayer();
+  const { data, isLoading, error, refetch } = useCatalog();
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
+  if (isLoading)
+    return (
+      <div className="p-4 md:p-8">
+        <LoadingState />
+      </div>
+    );
+  if (error) {
+    return (
+      <div className="p-4 md:p-8">
+        <ErrorState description={error.message} onRetry={() => refetch()} />
+      </div>
+    );
+  }
 
-  const quickPicks = playlists.slice(0, 6);
+  const tracks = data?.tracks || [];
+  const artists = data?.artists || [];
+  if (tracks.length === 0 && artists.length === 0) {
+    return (
+      <div className="p-4 md:p-8">
+        <EmptyState
+          icon={Music2}
+          title="The catalog is waiting for its first release"
+          description="Approved artist uploads will appear here as soon as they are published."
+        />
+      </div>
+    );
+  }
+
+  const popularTracks = [...tracks]
+    .sort((a, b) => b.totalPlays - a.totalPlays)
+    .slice(0, 6);
 
   return (
     <div className="space-y-10 p-4 pb-28 md:p-8">
-      {/* <FeaturedSpotlight tracks={tracks} /> */}
-
-      <div>
-        <Typography as="h1" variant="2xl" weight="bold" className="mb-6">
-          {getGreeting()}
+      <section>
+        <Typography as="h1" variant="2xl" weight="bold" className="mb-2">
+          Discover independent music
         </Typography>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {quickPicks.map((playlist) => (
-            <button
-              key={playlist.id}
-              onClick={() => playPlaylist(playlist.tracks)}
-              className="group flex items-center gap-4 overflow-hidden rounded-xl border border-white/5 bg-white/[0.06] text-left h-14 transition-colors hover:border-white/10 hover:bg-white/[0.1]"
-            >
-              <img
-                src={playlist.coverUrl}
-                alt={playlist.name}
-                className="h-14 w-14 object-cover"
-              />
-              <Typography
-                variant="sm"
-                weight="semibold"
-                className="flex-1 truncate pr-2"
-              >
-                {playlist.name}
-              </Typography>
-              <div className="pr-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="p-2.5 rounded-full bg-primary text-primary-foreground shadow-lg">
-                  <Play className="h-4 w-4 fill-current" />
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <HorizontalScroll title="Made for You">
-        {playlists.map((playlist) => (
-          <div key={playlist.id} className="min-w-[180px] max-w-[180px]">
-            <PlaylistCard playlist={playlist} />
-          </div>
-        ))}
-      </HorizontalScroll>
-
-      <section className="mb-10">
-        <Typography as="h2" variant="xl" weight="bold" className="mb-4">
-          Recently Played
+        <Typography variant="body" tone="muted">
+          Newly approved releases from Guruplay artists.
         </Typography>
-        <div className="rounded-xl border border-white/5 bg-white/[0.04] p-1">
-          {tracks.slice(0, 5).map((track, index) => (
-            <TrackCard
-              key={track.id}
-              track={track}
-              index={index + 1}
-              showIndex
-            />
-          ))}
-        </div>
       </section>
 
-      <HorizontalScroll title="Popular Artists">
-        {artists.map((artist) => (
-          <div key={artist.id} className="min-w-[180px] max-w-[180px]">
-            <ArtistCard artist={artist} />
+      {tracks.length > 0 && (
+        <section>
+          <Typography as="h2" variant="xl" weight="bold" className="mb-4">
+            New Releases
+          </Typography>
+          <div className="rounded-xl border border-white/5 bg-white/[0.04] p-1">
+            {tracks.slice(0, 8).map((track, index) => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                index={index + 1}
+                showIndex
+              />
+            ))}
           </div>
-        ))}
-      </HorizontalScroll>
+        </section>
+      )}
 
-      <HorizontalScroll title="New Releases">
-        {playlists
-          .slice()
-          .reverse()
-          .map((playlist) => (
-            <div key={playlist.id} className="min-w-[180px] max-w-[180px]">
-              <PlaylistCard playlist={playlist} />
+      {artists.length > 0 && (
+        <HorizontalScroll title="Approved Artists">
+          {artists.map((artist) => (
+            <div key={artist.id} className="min-w-[180px] max-w-[180px]">
+              <ArtistCard artist={artist} tracks={tracks} />
             </div>
           ))}
-      </HorizontalScroll>
+        </HorizontalScroll>
+      )}
+
+      {popularTracks.length > 0 && (
+        <section>
+          <Typography as="h2" variant="xl" weight="bold" className="mb-4">
+            Most Played
+          </Typography>
+          <div className="rounded-xl border border-white/5 bg-white/[0.04] p-1">
+            {popularTracks.map((track, index) => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                index={index + 1}
+                showIndex
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

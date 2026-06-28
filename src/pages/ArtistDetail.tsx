@@ -1,109 +1,72 @@
-import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Disc3 } from "lucide-react";
-import { albums, artists, tracks } from "@/data/mockData";
-import { usePlayer } from "@/context/PlayerContext";
+import { ArrowLeft, UsersRound } from "lucide-react";
 import ArtistHero from "@/components/artist/ArtistHero";
 import ArtistTrackTable from "@/components/artist/ArtistTrackTable";
-import Typography from "@/components/ui/typography";
+import EmptyState from "@/components/fallbacks/EmptyState";
+import ErrorState from "@/components/fallbacks/ErrorState";
+import LoadingState from "@/components/fallbacks/LoadingState";
+import { usePlayer } from "@/context/PlayerContext";
+import { useCatalog } from "@/hooks/use-catalog";
 
 const ArtistDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { playPlaylist } = usePlayer();
-  const artist = artists.find((item) => item.id === id);
+  const { data, isLoading, error, refetch } = useCatalog();
 
-  const artistTracks = useMemo(
-    () => tracks.filter((track) => track.artist === artist?.name),
-    [artist?.name],
-  );
+  if (isLoading)
+    return (
+      <div className="p-4 md:p-8">
+        <LoadingState />
+      </div>
+    );
+  if (error)
+    return (
+      <div className="p-4 md:p-8">
+        <ErrorState description={error.message} onRetry={() => refetch()} />
+      </div>
+    );
 
-  const artistAlbums = useMemo(
-    () => albums.filter((album) => album.artist === artist?.name),
-    [artist?.name],
-  );
-
+  const artist = data?.artists.find((item) => item.id === id);
   if (!artist) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center p-8">
-        <div className="text-center">
-          <Typography as="h1" variant="h2" weight="bold">
-            Artist not found
-          </Typography>
-          <Link
-            to="/artist"
-            className="mt-4 inline-block text-sm font-bold text-primary hover:underline"
-          >
-            Back to artists
-          </Link>
-        </div>
+      <div className="p-4 md:p-8">
+        <EmptyState
+          icon={UsersRound}
+          title="Artist not found"
+          description="This artist is unavailable or has not been approved."
+        />
       </div>
     );
   }
 
+  const tracks = (data?.tracks || []).filter(
+    (track) => track.userId === artist.userId,
+  );
   return (
     <div className="space-y-8 p-4 pb-28 md:p-8">
       <Link
         to="/artist"
         className="inline-flex items-center gap-2 text-sm font-bold text-white/55 hover:text-white"
       >
-        <ArrowLeft className="h-4 w-4" />
-        Artists
+        <ArrowLeft className="h-4 w-4" /> Artists
       </Link>
-
       <ArtistHero
         artist={artist}
-        tracks={artistTracks}
-        albums={artistAlbums}
-        onPlay={() => playPlaylist(artistTracks)}
-        onShuffle={() => playPlaylist(artistTracks)}
+        tracks={tracks}
+        onPlay={() => playPlaylist(tracks)}
+        onShuffle={() => playPlaylist(tracks)}
       />
-
-      <ArtistTrackTable
-        tracks={artistTracks}
-        onPlayTrack={(track) => playPlaylist([track])}
-      />
-
-      <section>
-        <Typography as="h2" variant="h2" weight="bold" className="mb-4">
-          Albums
-        </Typography>
-        {artistAlbums.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
-            {artistAlbums.map((album) => (
-              <button
-                key={album.id}
-                onClick={() => playPlaylist(album.tracks)}
-                className="group text-left"
-              >
-                <img
-                  src={album.coverUrl}
-                  alt={album.name}
-                  className="aspect-square w-full rounded-2xl object-cover transition-transform group-hover:scale-[1.02]"
-                />
-                <Typography
-                  variant="body"
-                  weight="bold"
-                  className="mt-3"
-                  truncate
-                >
-                  {album.name}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  className="mt-1 flex items-center gap-1 text-white/45"
-                >
-                  <Disc3 className="h-3.5 w-3.5" />
-                  {album.year}
-                </Typography>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-white/55">
-            No albums available yet.
-          </div>
-        )}
-      </section>
+      {tracks.length > 0 ? (
+        <ArtistTrackTable
+          tracks={tracks}
+          onPlayTrack={(track) => playPlaylist([track])}
+        />
+      ) : (
+        <EmptyState
+          title="No published tracks"
+          description="This artist has no approved releases yet."
+        />
+      )}
     </div>
   );
 };

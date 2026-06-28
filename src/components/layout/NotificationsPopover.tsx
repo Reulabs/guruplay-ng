@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/popover";
 import Typography from "@/components/ui/typography";
 import { useNotifications } from "@/hooks/use-notifications";
+import InlineState from "@/components/fallbacks/InlineState";
 
 const formatTime = (value: string) => {
   const date = new Date(value);
@@ -67,18 +68,13 @@ const NotificationsPopover = () => {
               Loading notifications...
             </div>
           ) : error ? (
-            <div className="p-4">
-              <Typography variant="body-sm" weight="bold">
-                Notifications unavailable
-              </Typography>
-              <Typography variant="caption" className="mt-1 text-white/55">
-                {error}
-              </Typography>
-            </div>
+            <InlineState
+              tone="error"
+              title="Notifications unavailable"
+              description={error}
+            />
           ) : notifications.length === 0 ? (
-            <div className="p-4 text-sm text-white/60">
-              No notifications yet.
-            </div>
+            <InlineState title="No notifications yet" />
           ) : (
             notifications.map((notification) => (
               <div

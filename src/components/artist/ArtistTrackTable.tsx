@@ -1,5 +1,5 @@
 import { Clock, Heart, Play } from "lucide-react";
-import { Track } from "@/data/mockData";
+import { Track } from "@/types/music";
 import Typography from "@/components/ui/typography";
 
 interface ArtistTrackTableProps {
@@ -50,11 +50,15 @@ const ArtistTrackTable = ({
             </span>
             <Play className="hidden h-4 w-4 fill-current text-white group-hover:block" />
             <span className="flex min-w-0 items-center gap-3">
-              <img
-                src={track.coverUrl}
-                alt={track.title}
-                className="h-12 w-12 rounded-lg object-cover"
-              />
+              {track.coverUrl ? (
+                <img
+                  src={track.coverUrl}
+                  alt={track.title}
+                  className="h-12 w-12 rounded-lg object-cover"
+                />
+              ) : (
+                <span className="h-12 w-12 rounded-lg bg-white/[0.06]" />
+              )}
               <span className="min-w-0">
                 <Typography variant="body" weight="bold" truncate>
                   {track.title}
@@ -73,7 +77,7 @@ const ArtistTrackTable = ({
               className="hidden text-white/55 md:block"
               truncate
             >
-              {track.album}
+              {track.genre || "Uncategorized"}
             </Typography>
             <Typography
               variant="body-sm"

@@ -1,5 +1,6 @@
 import { TrendingUp, Music } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/fallbacks/EmptyState";
 
 interface Song {
   id: string;
@@ -25,10 +26,12 @@ const TopSongsTable = ({ songs }: TopSongsTableProps) => {
       </CardHeader>
       <CardContent>
         {songs.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Music className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No songs uploaded yet</p>
-          </div>
+          <EmptyState
+            icon={Music}
+            title="No songs uploaded yet"
+            description="Performance data will appear after your first upload."
+            className="min-h-48 border-0 bg-transparent"
+          />
         ) : (
           <div className="space-y-3">
             {songs.map((song, index) => (
@@ -39,11 +42,18 @@ const TopSongsTable = ({ songs }: TopSongsTableProps) => {
                 <div className="w-8 text-center font-bold text-muted-foreground">
                   #{index + 1}
                 </div>
-                <img
-                  src={song.cover_url}
-                  alt={song.title}
-                  className="w-12 h-12 rounded object-cover"
-                />
+                {song.cover_url ? (
+                  <img
+                    src={song.cover_url}
+                    alt={song.title}
+                    className="h-12 w-12 rounded object-cover"
+                  />
+                ) : (
+                  <div
+                    className="h-12 w-12 rounded bg-white/[0.06]"
+                    aria-hidden
+                  />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{song.title}</p>
                   <p className="text-sm text-muted-foreground truncate">

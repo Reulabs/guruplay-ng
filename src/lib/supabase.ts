@@ -22,6 +22,9 @@ export interface Song {
   genre: string;
   total_plays: number;
   total_likes: number;
+  approval_status: "pending" | "approved" | "rejected";
+  reviewed_at: string | null;
+  reviewed_by: string | null;
   created_at: string;
   updated_at: string;
 }

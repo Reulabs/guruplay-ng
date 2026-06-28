@@ -20,16 +20,6 @@ interface NotificationRow {
   created_at: string;
 }
 
-const getFallbackNotifications = (): AppNotification[] => [
-  {
-    id: "welcome",
-    title: "Welcome to Guruplay",
-    body: "New account updates and listening activity will appear here.",
-    read: false,
-    createdAt: new Date().toISOString(),
-  },
-];
-
 const mapNotification = (row: NotificationRow): AppNotification => ({
   id: row.id,
   title: row.title || "Notification",
@@ -52,7 +42,7 @@ export const useNotifications = () => {
     }
 
     if (!isSupabaseConfigured) {
-      setNotifications(getFallbackNotifications());
+      setNotifications([]);
       setError("Supabase is not configured.");
       return;
     }

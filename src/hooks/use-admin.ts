@@ -35,6 +35,10 @@ export interface AdminState {
     profileId: string,
     status: ArtistApprovalStatus.Approved | ArtistApprovalStatus.Rejected,
   ) => Promise<void>;
+  updateSongStatus: (
+    songId: string,
+    status: "approved" | "rejected",
+  ) => Promise<void>;
   deleteSong: (songId: string) => Promise<void>;
 }
 
@@ -188,6 +192,19 @@ export const useAdmin = (): AdminState => {
     [refresh],
   );
 
+  const updateSongStatus = useCallback(
+    async (songId: string, status: "approved" | "rejected") => {
+      const { error: updateError } = await supabase.rpc("review_song", {
+        target_song_id: songId,
+        next_status: status,
+      });
+
+      if (updateError) throw getAppError(updateError);
+      await refresh();
+    },
+    [refresh],
+  );
+
   return useMemo(
     () => ({
       isAdmin,
@@ -199,6 +216,7 @@ export const useAdmin = (): AdminState => {
       activity,
       refresh,
       updateArtistStatus,
+      updateSongStatus,
       deleteSong,
     }),
     [
@@ -211,6 +229,7 @@ export const useAdmin = (): AdminState => {
       refresh,
       songs,
       updateArtistStatus,
+      updateSongStatus,
       users,
     ],
   );

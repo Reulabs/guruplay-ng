@@ -1,6 +1,6 @@
 import { Play, UsersRound, Music2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Artist, Track } from "@/data/mockData";
+import { Artist, Track } from "@/types/music";
 import Typography from "@/components/ui/typography";
 
 interface ArtistCardRowProps {
@@ -14,11 +14,18 @@ const ArtistCardRow = ({ artist, tracks, onPlay }: ArtistCardRowProps) => {
     <article className="group rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition-colors hover:bg-white/[0.07]">
       <div className="flex gap-4">
         <Link to={`/artist/${artist.id}`} className="shrink-0">
-          <img
-            src={artist.imageUrl}
-            alt={artist.name}
-            className="h-24 w-24 rounded-2xl object-cover"
-          />
+          {artist.imageUrl ? (
+            <img
+              src={artist.imageUrl}
+              alt={artist.name}
+              className="h-24 w-24 rounded-2xl object-cover"
+            />
+          ) : (
+            <div
+              className="h-24 w-24 rounded-2xl bg-white/[0.06]"
+              aria-hidden
+            />
+          )}
         </Link>
         <div className="min-w-0 flex-1">
           <Link to={`/artist/${artist.id}`}>
@@ -41,7 +48,10 @@ const ArtistCardRow = ({ artist, tracks, onPlay }: ArtistCardRowProps) => {
             </span>
             <span className="flex items-center gap-1">
               <UsersRound className="h-3.5 w-3.5" />
-              {Math.max(tracks.length * 1284, 2400).toLocaleString()} listeners
+              {tracks
+                .reduce((sum, track) => sum + track.totalPlays, 0)
+                .toLocaleString()}{" "}
+              plays
             </span>
           </div>
         </div>
