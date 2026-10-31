@@ -2,6 +2,7 @@
 
 ## Services
 
+- The repository-root `vercel.json` deploys the listener from `apps/web/dist` and exposes its existing API through `api/v1/[...path].mjs`. This supports the existing Vercel project whose root directory is the repository root. The admin app remains a separate deployment with root directory `apps/admin`.
 - Deploy `apps/web` and `apps/admin` as separate Vercel projects. Both need the root Supabase URL, public anon key, and server-only service role key. The listener project needs the Paystack secret, plan code, plan amount in the Paystack currency's smallest unit, currency, public app URL, and cron secret.
 - Build the media worker from `apps/web/Dockerfile.worker` and run `npm run worker:media --workspace=@guruplay/web` in a container with persistent logs and the same Supabase server credentials. The image includes FFmpeg and ffprobe.
 - Register the Paystack webhook URL as `https://<listener-domain>/api/v1/webhooks/paystack`. Use HTTPS and keep webhook signature verification enabled.
@@ -22,6 +23,7 @@
 - Transaction verification accepts Paystack's `plan_object`, plan code string, or plan object. When the transaction does not include its subscription, the API resolves the recurring subscription by customer, plan, card authorization, environment, and creation time before recording it. A subscription still being created leaves checkout pending for verification or reconciliation to retry.
 - Accounts with an active entitlement cannot start another subscription checkout.
 - Scheduled reconciliation runs every 15 minutes. Vercel supplies the `CRON_SECRET` bearer token to scheduled functions when that environment variable is configured.
+- The root deployment does not register a cron schedule. Configure an authenticated 15-minute reconciliation trigger using a scheduler and hosting plan that supports this frequency before enabling production subscriptions. The app-directory cron configuration applies only to deployments rooted at `apps/web`.
 - Full URLs are signed for five minutes. Subscription status is checked for each new playback session; the latest confirmed paid period includes a 24-hour grace period.
 
 ## Local development
