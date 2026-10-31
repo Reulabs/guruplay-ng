@@ -11,8 +11,11 @@ import {
   Preferences,
 } from "@/hooks/use-personal";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/hooks/use-subscription";
+import PremiumBadge from "@/components/account/PremiumBadge";
 function Contents() {
   const { user } = useAuth();
+  const subscription = useSubscription();
   const settings = useSettings();
   const mutation = usePersonalMutation();
   const [name, setName] = useState("");
@@ -59,7 +62,10 @@ function Contents() {
         className="space-y-7"
       >
         <section className="rounded-2xl border border-white/10 p-5 space-y-4">
-          <h2 className="text-lg font-bold">Your account</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-bold">Your account</h2>
+            {subscription.data?.entitled && <PremiumBadge />}
+          </div>
           <label className="block">
             Display name
             <Input

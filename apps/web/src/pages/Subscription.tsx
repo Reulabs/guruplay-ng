@@ -1,106 +1,183 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import {
+  checkoutReference,
+  resolveSubscriptionReturn,
+} from "@guruplay/common/subscription";
 import { Button } from "@guruplay/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { useCatalog } from "@/hooks/use-catalog";
 import { usePlayer } from "@/context/PlayerContext";
+import {
+  billingRequest,
+  readSubscription,
+  subscriptionKey,
+  verifySubscription,
+} from "@/hooks/use-subscription";
+import PremiumBadge from "@/components/account/PremiumBadge";
 
-const Subscription = () => {
+export default function Subscription() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const cache = useQueryClient();
   const { user, isAuthLoading, openAuthDialog } = useAuth();
-  const { data } = useCatalog();
-  const { play, startSubscription, checkoutLoading } = usePlayer();
-  const [message, setMessage] = useState("Checking your subscription…");
+  const { startSubscription, checkoutLoading, closeUpgrade } = usePlayer();
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [entitled, setEntitled] = useState<boolean | null>(null);
-  const reference = params.get("reference");
+  const reference = checkoutReference(params);
+  const hasCallback = params.has("reference") || params.has("trxref");
   const userId = user?.id;
-
-  useEffect(() => {
-    if (isAuthLoading) return;
-    setEntitled(null);
-    if (!userId) {
-      setMessage(reference ? "Sign in to confirm this payment." : "Sign in to subscribe or view your subscription.");
-      return;
-    }
-    const controller = new AbortController();
-    setMessage(reference ? "Confirming your payment…" : "Checking your subscription…");
-    void (async () => {
-      const { data: authData } = await supabase.auth.getSession();
-      if (!authData.session) {
-        throw new Error("Sign in to view your subscription.");
-      }
-      if (reference) {
-        const response = await fetch("/api/v1/billing/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${authData.session.access_token}` },
-          body: JSON.stringify({ reference }),
-          signal: controller.signal,
-        });
-        const result = await response.json().catch(() => null);
-        if (!response.ok || result?.status !== "verified") {
-          throw new Error(result?.error || "We could not confirm the payment yet. Check again in a moment.");
-        }
-      }
-      const response = await fetch("/api/v1/billing/subscription", {
-        headers: { Authorization: `Bearer ${authData.session.access_token}` },
-        signal: controller.signal,
+  const result = useQuery({
+    queryKey: ["subscription-page", userId, hasCallback, reference],
+    enabled: !!userId && !isAuthLoading,
+    retry: false,
+    queryFn: async ({ signal }) => {
+      if (!userId) throw new Error("Sign in to view your subscription.");
+      const checked = hasCallback
+        ? await resolveSubscriptionReturn({
+            reference,
+            readStatus: () => readSubscription(userId, signal),
+            verify: (paymentReference) =>
+              verifySubscription(paymentReference, userId, signal),
+          })
+        : {
+            subscription: await readSubscription(userId, signal),
+            message: null,
+          };
+      signal.throwIfAborted();
+      await cache.cancelQueries({
+        queryKey: subscriptionKey(userId),
+        exact: true,
       });
-      const subscription = await response.json().catch(() => null);
-      if (!response.ok || typeof subscription?.entitled !== "boolean") {
-        throw new Error(subscription?.error || "We could not check your subscription. Please try again.");
-      }
-      if (controller.signal.aborted) return;
-      setEntitled(subscription.entitled);
-      setMessage(subscription.entitled
-        ? "Your subscription is active. Full listening is unlocked."
-        : "Subscribe monthly to listen to full tracks across the Guruplay catalog.");
-    })().catch((error: unknown) => {
-      if (!controller.signal.aborted) setMessage(error instanceof Error ? error.message : "We could not check your subscription.");
-    });
-    return () => controller.abort();
-  }, [isAuthLoading, userId, reference]);
+      signal.throwIfAborted();
+      cache.setQueryData(subscriptionKey(userId), checked.subscription);
+      return checked;
+    },
+  });
+  const subscription = result.data?.subscription;
 
   useEffect(() => {
-    if (!reference || !entitled || !data?.tracks) return;
-    const resumeId = sessionStorage.getItem("guruplay-return-track");
-    const track = data.tracks.find((item) => item.id === resumeId);
-    if (track) {
-      sessionStorage.removeItem("guruplay-return-track");
-      play(track);
-    }
-  }, [data?.tracks, entitled, play, reference]);
+    if (
+      !hasCallback ||
+      !subscription?.entitled ||
+      result.data?.message ||
+      result.isFetching
+    )
+      return;
+    closeUpgrade();
+    sessionStorage.removeItem("guruplay-return-track");
+    navigate("/dashboard", { replace: true });
+  }, [
+    hasCallback,
+    subscription?.entitled,
+    result.data?.message,
+    result.isFetching,
+    closeUpgrade,
+    navigate,
+  ]);
 
   const manage = async () => {
-    const { data: authData } = await supabase.auth.getSession();
-    if (!authData.session) {
-      openAuthDialog("login");
-      return;
-    }
+    if (!userId) return;
     setBusy(true);
+    setActionMessage(null);
     try {
-      const response = await fetch("/api/v1/billing/manage", {
-        method: "POST", headers: { Authorization: `Bearer ${authData.session.access_token}` },
+      const response = await billingRequest("manage", userId, {
+        method: "POST",
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not open subscription management.");
-      setMessage(result.message || "Paystack sent your management link by email.");
+      const parsed = z.object({ message: z.string() }).safeParse(response);
+      if (!parsed.success)
+        throw new Error(
+          "We couldn’t open subscription management. Please try again.",
+        );
+      setActionMessage(parsed.data.message);
+    } catch (error) {
+      setActionMessage(
+        error instanceof Error
+          ? error.message
+          : "We couldn’t open subscription management. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
   };
 
+  const message = isAuthLoading
+    ? "Loading your account…"
+    : !user
+      ? "Sign in with the account used at checkout to check your subscription."
+      : result.isPending
+        ? hasCallback
+          ? "Confirming your subscription…"
+          : "Checking your subscription…"
+        : result.error?.message ||
+          actionMessage ||
+          result.data?.message ||
+          (subscription?.entitled
+            ? hasCallback
+              ? "Your subscription is active. Returning to your dashboard…"
+              : "Your subscription is active. Full listening is unlocked."
+            : "Subscribe monthly to listen to full tracks across the Guruplay catalog.");
+
   return (
     <main className="mx-auto max-w-xl space-y-5 p-6 pt-16 text-white">
-      <h1 className="text-3xl font-bold">Guruplay subscription</h1>
-      <p aria-live="polite" className="text-white/70">{message}</p>
-      {!isAuthLoading && !user && <Button variant="outline" onClick={() => openAuthDialog("login")}>Sign in</Button>}
-      {user && entitled === false && <Button onClick={() => void startSubscription().catch((error: unknown) => setMessage(error instanceof Error ? error.message : "Unable to start checkout."))} disabled={checkoutLoading}>{checkoutLoading ? "Opening checkout…" : "Subscribe with Paystack"}</Button>}
-      {user && entitled === true && <Button onClick={() => void manage().catch((error: unknown) => setMessage(error instanceof Error ? error.message : "Unable to manage your subscription."))} disabled={busy}>{busy ? "Opening…" : "Manage payment method"}</Button>}
-      <div><Link to="/" className="text-sm underline text-white/60">Back to Guruplay</Link></div>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-bold">Guruplay subscription</h1>
+        {subscription?.entitled && <PremiumBadge />}
+      </div>
+      <p aria-live="polite" className="leading-7 text-white/70">
+        {message}
+      </p>
+      {!isAuthLoading && !user && (
+        <Button variant="outline" onClick={() => openAuthDialog("login")}>
+          Sign in
+        </Button>
+      )}
+      {user &&
+        (result.error ||
+          (hasCallback && !result.isPending && !!result.data?.message)) && (
+          <div className="flex flex-wrap items-center gap-4">
+            <Button
+              disabled={result.isFetching}
+              onClick={() => {
+                setActionMessage(null);
+                void result.refetch();
+              }}
+            >
+              {result.isFetching ? "Checking…" : "Check subscription again"}
+            </Button>
+            <Link to="/support" className="text-sm underline">
+              Get support
+            </Link>
+          </div>
+        )}
+      {user && !hasCallback && subscription?.entitled === false && (
+        <Button
+          onClick={() => {
+            setActionMessage(null);
+            void startSubscription().catch((error: unknown) =>
+              setActionMessage(
+                error instanceof Error
+                  ? error.message
+                  : "We couldn’t open checkout. Please try again.",
+              ),
+            );
+          }}
+          disabled={checkoutLoading}
+        >
+          {checkoutLoading ? "Opening checkout…" : "Subscribe with Paystack"}
+        </Button>
+      )}
+      {user && !hasCallback && subscription?.entitled && (
+        <Button onClick={() => void manage()} disabled={busy}>
+          {busy ? "Opening…" : "Manage payment method"}
+        </Button>
+      )}
+      <div>
+        <Link to="/dashboard" className="text-sm text-white/60 underline">
+          Back to dashboard
+        </Link>
+      </div>
     </main>
   );
-};
-
-export default Subscription;
+}

@@ -8,6 +8,7 @@ import MusicSkeleton from "@guruplay/shared/fallbacks/MusicSkeleton";
 import CatalogFallback from "@guruplay/shared/fallbacks/CatalogFallback";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/hooks/use-subscription";
 import { supabase } from "@/lib/supabase";
 import { MUSIC_GENRES } from "@/config/music";
 import { Track } from "@/types/music";
@@ -45,7 +46,11 @@ function SongSection({
 export default function Home() {
   const navigate = useNavigate();
   const catalog = useCatalog();
-  const { user } = useAuth();
+  const { user, isAuthLoading } = useAuth();
+  const subscription = useSubscription();
+  const showMembership =
+    !isAuthLoading &&
+    (!user || (subscription.isSuccess && !subscription.data.entitled));
   const [genre, setGenre] = useState("All");
   const recommendations = useQuery({
     queryKey: ["recommendations", user?.id || "anonymous"],
@@ -117,31 +122,33 @@ export default function Home() {
           Meet the artists <span aria-hidden="true">↗</span>
         </Link>
       </section>
-      <section
-        className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-[#181818] px-5 py-6 sm:flex sm:items-center sm:justify-between sm:gap-6 md:px-7"
-        aria-label="Guruplay membership"
-      >
-        <div className="relative flex items-center gap-4">
-          <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:flex">
-            <Headphones className="h-5 w-5 text-primary" />
-          </span>
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">
-              Stay for the whole song.
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-white/45">
-              Full-track listening. One monthly membership.
-            </p>
-          </div>
-        </div>
-        <Link
-          to="/subscription"
-          className="relative mt-5 inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 sm:mt-0"
+      {showMembership && (
+        <section
+          className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-[#181818] px-5 py-6 sm:flex sm:items-center sm:justify-between sm:gap-6 md:px-7"
+          aria-label="Guruplay membership"
         >
-          Explore membership
-          <ArrowUpRight className="h-4 w-4" />
-        </Link>
-      </section>
+          <div className="relative flex items-center gap-4">
+            <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:flex">
+              <Headphones className="h-5 w-5 text-primary" />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">
+                Stay for the whole song.
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-white/45">
+                Full-track listening. One monthly membership.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/subscription"
+            className="relative mt-5 inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 sm:mt-0"
+          >
+            Explore membership
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </section>
+      )}
       <nav
         aria-label="Filter music by genre"
         className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-thin md:mx-0 md:px-0"

@@ -94,7 +94,7 @@ async function startCheckout(req, res, config, service, actor) {
   const amount = Number(process.env.PAYSTACK_MONTHLY_AMOUNT);
   const currency = process.env.PAYSTACK_CURRENCY.toUpperCase();
   if (!/^sk_(test|live)_/.test(config.paystackKey)) throw createApiError(503, 'A Paystack secret key is required for billing.');
-  const callbackUrl = checkoutCallbackUrl(process.env.PUBLIC_APP_URL, config.paystackKey, reference);
+  const callbackUrl = checkoutCallbackUrl(process.env.PUBLIC_APP_URL, config.paystackKey, reference, req.headers.origin);
   if (!Number.isSafeInteger(amount) || amount <= 0 || !/^[A-Z]{3}$/.test(currency)) throw createApiError(503, 'Billing configuration is invalid.');
   const { error } = await service.from('billing_checkout_attempts').insert({
     reference, user_id: actor.user.id, plan_code: planCode, expected_amount: amount, currency,
@@ -115,7 +115,9 @@ async function startCheckout(req, res, config, service, actor) {
 async function verifyCheckout(req, res, config, service, actor, reference) {
   if (!config.paystackKey || !reference || !/^[A-Za-z0-9._=-]{1,100}$/.test(reference)) throw createApiError(400, 'A valid payment reference is required.');
   const { data: checkout, error } = await service.from('billing_checkout_attempts').select('*').eq('reference', reference).eq('user_id', actor.user.id).maybeSingle();
-  if (error || !checkout) throw createApiError(404, 'Checkout was not found.');
+  if (error) throw createApiError(503, 'We couldn’t look up this payment. Please try again shortly.');
+  if (!checkout) throw createApiError(404, 'We couldn’t match this payment to your account. Sign in with the account used at checkout, or contact support if you were charged.');
+  if (checkout.status === 'verified') return json(res, 200, { status: 'verified' });
   const transaction = await paystackRequest(config.paystackKey, `/transaction/verify/${encodeURIComponent(reference)}`);
   if (!matchesCheckout(transaction, checkout, actor.user.email)) {
     await service.from('billing_checkout_attempts').update({ status: 'failed' }).eq('reference', reference).neq('status', 'verified');

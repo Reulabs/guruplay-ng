@@ -13,6 +13,15 @@ test('local callbacks require test credentials and live callbacks require HTTPS'
   ]) assert.throws(() => checkoutCallbackUrl(url, key, 'guru-test'));
 });
 
+test('test checkout preserves the starting loopback origin without allowing arbitrary redirect origins', () => {
+  const configured = 'http://127.0.0.1:8080';
+  assert.equal(checkoutCallbackUrl(configured, 'sk_test_example', 'guru-test', 'http://localhost:8080'), 'http://localhost:8080/subscription?reference=guru-test');
+  assert.equal(checkoutCallbackUrl(configured, 'sk_test_example', 'guru-test', 'http://[::1]:8080'), 'http://[::1]:8080/subscription?reference=guru-test');
+  for (const origin of [undefined, 'invalid', 'https://attacker.example', 'http://localhost.attacker.example:8080', 'http://localhost:9999', 'http://user:password@localhost:8080', 'http://localhost:8080/other'])
+    assert.equal(checkoutCallbackUrl(configured, 'sk_test_example', 'guru-test', origin), 'http://127.0.0.1:8080/subscription?reference=guru-test');
+  assert.equal(checkoutCallbackUrl('https://music.example', 'sk_live_example', 'guru-test', 'http://localhost:8080'), 'https://music.example/subscription?reference=guru-test');
+});
+
 test('subscription linking rejects another customer, plan, card, environment, or earlier purchase', () => {
   const transaction = { domain: 'test', paid_at: '2026-10-19T05:23:05Z', customer: { customer_code: 'CUS_test' }, authorization: { authorization_code: 'AUTH_test' } };
   const subscription = { domain: 'test', subscription_code: 'SUB_test', createdAt: '2026-10-19T05:23:06Z', next_payment_date: '2026-11-19T05:23:00Z', customer: { customer_code: 'CUS_test' }, authorization: { authorization_code: 'AUTH_test' }, plan: { plan_code: 'PLN_test' } };

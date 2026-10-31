@@ -17,6 +17,7 @@ import { Track } from "@/types/music";
 import { supabase } from "@/lib/supabase";
 import { PlaybackEventType, PlaybackState } from "@guruplay/common/music";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -75,14 +76,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { openAuthDialog, isAuthenticated, isAuthDialogOpen } = useAuth();
+  const subscription = useSubscription();
+  const isPremium = subscription.data?.entitled === true;
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [state, setState] = useState<PlaybackState>("idle");
   const [isPreview, setIsPreview] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   useEffect(() => {
-    if (isAuthDialogOpen) setShowUpgrade(false);
-  }, [isAuthDialogOpen]);
+    if (isAuthDialogOpen || isPremium) setShowUpgrade(false);
+  }, [isAuthDialogOpen, isPremium]);
   const library = useLibrary();
   const settings = useSettings();
   const mutation = usePersonalMutation();
@@ -361,7 +364,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       if (isPreview) {
         setState("ended");
-        setShowUpgrade(!isAuthDialogOpen);
+        setShowUpgrade(!isAuthDialogOpen && !isPremium);
         return;
       }
       if (repeat === "one") {
@@ -384,7 +387,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
     };
-  }, [currentTrack, isPreview, isAuthDialogOpen, next, play, record, repeat]);
+  }, [
+    currentTrack,
+    isPreview,
+    isAuthDialogOpen,
+    isPremium,
+    next,
+    play,
+    record,
+    repeat,
+  ]);
 
   useEffect(() => {
     setVolumeState(settings.data?.preferences.volume ?? 0.7);
@@ -475,15 +487,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const toggle = useCallback(() => {
     if (state === "playing") pause();
+    else if (isPremium && isPreview && currentTrack) play(currentTrack);
     else play();
-  }, [pause, play, state]);
+  }, [pause, play, state, isPremium, isPreview, currentTrack]);
 
   const value: PlayerContextType = {
     currentTrack,
     isPlaying: state === "playing",
     state,
     isPreview,
-    showUpgrade,
+    showUpgrade: showUpgrade && !isPremium,
     checkoutLoading,
     likedTrackIds,
     progress,

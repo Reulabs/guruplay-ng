@@ -1,4 +1,4 @@
-export function checkoutCallbackUrl(appUrl, secret, reference) {
+export function checkoutCallbackUrl(appUrl, secret, reference, requestOrigin) {
   let url;
   try { url = new URL(appUrl); } catch {
     throw Object.assign(new Error('The public application URL is not configured.'), { status: 503 });
@@ -8,7 +8,17 @@ export function checkoutCallbackUrl(appUrl, secret, reference) {
   if ((url.protocol !== 'https:' && !localTest) || url.username || url.password) {
     throw Object.assign(new Error('Billing requires HTTPS, or a loopback URL with a Paystack test key.'), { status: 503 });
   }
-  const callback = new URL('/subscription', url);
+  let returnOrigin = url;
+  if (localTest && typeof requestOrigin === 'string') {
+    try {
+      const requested = new URL(requestOrigin);
+      if (requested.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(requested.hostname) &&
+          requested.port === url.port && !requested.username && !requested.password && requested.pathname === '/' && !requested.search && !requested.hash) returnOrigin = requested;
+    } catch {
+      returnOrigin = url;
+    }
+  }
+  const callback = new URL('/subscription', returnOrigin);
   callback.searchParams.set('reference', reference);
   return callback.href;
 }

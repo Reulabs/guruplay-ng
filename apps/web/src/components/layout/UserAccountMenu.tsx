@@ -1,5 +1,7 @@
 import { useSettings, usePersonalMutation } from "@/hooks/use-personal";
 import { useState } from "react";
+import { useSubscription } from "@/hooks/use-subscription";
+import PremiumBadge from "@/components/account/PremiumBadge";
 import {
   LogOut,
   Settings,
@@ -41,6 +43,7 @@ const UserAccountMenu = () => {
   const settings = useSettings();
   const mutation = usePersonalMutation();
   const { user, logout } = useAuth();
+  const subscription = useSubscription();
   const { toast } = useToast();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -86,6 +89,11 @@ const UserAccountMenu = () => {
             <span className="hidden max-w-28 truncate text-sm font-bold 2xl:block">
               {name}
             </span>
+            {subscription.data?.entitled && (
+              <span className="hidden sm:inline-flex">
+                <PremiumBadge />
+              </span>
+            )}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -93,6 +101,11 @@ const UserAccountMenu = () => {
           className="w-72 rounded-2xl border-white/10 bg-[#242424] p-2 text-white shadow-2xl"
         >
           <DropdownMenuLabel className="px-3 py-3">
+            {subscription.data?.entitled && (
+              <div className="mb-2">
+                <PremiumBadge />
+              </div>
+            )}
             <Typography variant="body" weight="bold" truncate>
               {name}
             </Typography>

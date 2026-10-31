@@ -44,6 +44,8 @@ import { useToast } from "@/hooks/use-toast";
 import { MUSIC_GENRES } from "@/config/music";
 import ErrorState from "@guruplay/shared/fallbacks/ErrorState";
 import EmptyState from "@guruplay/shared/fallbacks/EmptyState";
+import { useSubscription } from "@/hooks/use-subscription";
+import PremiumBadge from "@/components/account/PremiumBadge";
 
 interface UploadedSong {
   id: string;
@@ -87,6 +89,7 @@ const Dashboard = () => {
   const { user, isAuthenticated, isAuthLoading, logout, openAuthDialog } =
     useAuth();
   const { toast } = useToast();
+  const subscription = useSubscription();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -755,6 +758,7 @@ const Dashboard = () => {
             </Link>
 
             <div className="flex items-center gap-4">
+              {subscription.data?.entitled && <PremiumBadge />}
               <Button
                 aria-label="Account settings"
                 onClick={() => navigate("/settings")}
