@@ -1,0 +1,205 @@
+import { useSettings, usePersonalMutation } from "@/hooks/use-personal";
+import { useState } from "react";
+import {
+  LogOut,
+  Settings,
+  UserRound,
+  Clock3,
+  LifeBuoy,
+  Shield,
+  CircleDollarSign,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@guruplay/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@guruplay/ui/dropdown-menu";
+import { useAuth } from "@/context/AuthContext";
+import Typography from "@guruplay/ui/typography";
+import { useToast } from "@/hooks/use-toast";
+
+const getInitial = (value?: string) => {
+  return (value || "G").trim().charAt(0).toUpperCase();
+};
+
+const UserAccountMenu = () => {
+  const navigate = useNavigate();
+  const settings = useSettings();
+  const mutation = usePersonalMutation();
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const name =
+    settings.data?.display_name ||
+    user?.displayName ||
+    user?.email ||
+    "Account";
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+      setIsLogoutOpen(false);
+      navigate("/");
+      toast({
+        title: "Logged out",
+        description: "Your session has ended.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not log out",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            aria-label="Account menu"
+            className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] p-1 2xl:pr-4 text-white transition-colors hover:bg-white/12"
+          >
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-base font-black text-primary-foreground">
+              {getInitial(name)}
+            </span>
+            <span className="hidden max-w-28 truncate text-sm font-bold 2xl:block">
+              {name}
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-72 rounded-2xl border-white/10 bg-[#242424] p-2 text-white shadow-2xl"
+        >
+          <DropdownMenuLabel className="px-3 py-3">
+            <Typography variant="body" weight="bold" truncate>
+              {name}
+            </Typography>
+            <Typography variant="caption" className="text-white/50" truncate>
+              {user?.email}
+            </Typography>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-white/10" />
+          <DropdownMenuItem
+            onClick={() => navigate("/settings")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <UserRound className="h-5 w-5" />
+            Account
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate("/dashboard")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <CircleDollarSign className="h-5 w-5" />
+            Artist dashboard
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate("/library?view=history")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <Clock3 className="h-5 w-5" />
+            Recents
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate("/support")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <LifeBuoy className="h-5 w-5" />
+            Support
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!settings.data || mutation.isPending}
+            onClick={() => {
+              void mutation
+                .mutateAsync({
+                  path: "me/settings",
+                  method: "PATCH",
+                  body: {
+                    private_session:
+                      !settings.data?.preferences.private_session,
+                  },
+                })
+                .catch((error: Error) =>
+                  toast({
+                    title: "Could not update private session",
+                    description: error.message,
+                  }),
+                );
+            }}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <Shield className="h-5 w-5" />
+            Private session{" "}
+            {settings.data?.preferences.private_session ? "· On" : "· Off"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate("/settings")}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <Settings className="h-5 w-5" />
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="bg-white/10" />
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              setIsLogoutOpen(true);
+            }}
+            className="gap-3 rounded-xl px-3 py-3 text-base focus:bg-white/10 focus:text-white"
+          >
+            <LogOut className="h-5 w-5" />
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={isLogoutOpen} onOpenChange={setIsLogoutOpen}>
+        <AlertDialogContent className="border-white/10 bg-[#111] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log out of Guruplay?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to log in again before listening, uploading, or
+              viewing account activity.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLogout}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? "Logging out..." : "Log out"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
+export default UserAccountMenu;

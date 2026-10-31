@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/v1/internal/reconcile", "schedule": "*/15 * * * *" }
+  ]
+}

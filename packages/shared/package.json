@@ -1,0 +1,22 @@
+{
+  "name": "@guruplay/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./logo": "./src/logo.tsx",
+    "./network-status": "./src/network-status.tsx",
+    "./fallbacks/*": "./src/fallbacks/*.tsx",
+    "./assets/*": "./src/assets/*",
+    "./assets": "./src/assets.ts"
+  },
+  "dependencies": {
+    "@guruplay/common": "file:../common",
+    "@guruplay/ui": "file:../ui",
+    "lucide-react": "^0.462.0"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

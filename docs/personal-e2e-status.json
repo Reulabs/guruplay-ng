@@ -1,0 +1,54 @@
+{
+  "testedAt": "2026-10-19T07:15:25.711Z",
+  "project": "fuquclbwwofwugkxirrl",
+  "environment": "local app with real Supabase",
+  "checks": [
+    "anonymous personal data denied",
+    "active listener, pending artist, approved artist and admin can load personal settings",
+    "settings reject privilege fields and invalid volume",
+    "profile and playback settings persisted",
+    "saved songs idempotent, persisted, isolated and removable",
+    "playlist order persisted; duplicates and stale revisions rejected",
+    "cross-account reads, edits, delete, membership RPC and direct RLS denied",
+    "unpublished tracks hidden and cannot be saved or added",
+    "playlist edit, remove song and delete persisted",
+    "listening history, server-enforced private session, recommendations and history clearing",
+    "support request, admin response and owner isolation",
+    "only admin receives review audio",
+    "paused account API and direct database writes denied",
+    "approved artist cannot moderate",
+    "concurrent independent preferences preserved",
+    "artist metrics use qualified real playback sessions and saved songs; anonymous and cross-owner access denied"
+  ],
+  "browserChecks": [
+    "Desktop and 390px mobile private playlist creation, saved-song persistence, adding/removing tracks, ordering, editing and reload",
+    "Preview playback, next and previous transitions, mobile queue clearing",
+    "Existing paid test account full-track station playback; autoplay on advances, autoplay off stops and preserves the queue",
+    "Profile and privacy settings saved through UI and verified after reload",
+    "Listener support request and administrator response saved through both apps; response visible after reload",
+    "Admin email search, account edit, pause and restore on disposable account",
+    "Admin private review audio loaded (35 seconds, readyState 4) and played by keyboard",
+    "Rejection reason persisted; test track reapproved; admin tab retained after refresh",
+    "Admin upload link opens dashboard and actual upload form",
+    "Artist metrics display two real qualified plays, one listener and one saved song",
+    "Notifications display empty state without schema errors",
+    "Signed-out library displays sign-in gate"
+  ],
+  "automatedChecks": {
+    "command": "npm run check",
+    "unitTests": 8,
+    "lintErrors": 0,
+    "lintWarnings": 4,
+    "typecheck": "both apps passed",
+    "build": "both apps passed"
+  },
+  "cleanup": {
+    "verified": true,
+    "originalProfilesPreserved": 2,
+    "temporaryAuthAccountsRemoved": true,
+    "temporaryMediaRemoved": true,
+    "originalAdminPreferencesRestored": true,
+    "paymentEntitlementPreserved": true
+  },
+  "completedAt": "2026-10-19T07:30:50.658Z"
+}

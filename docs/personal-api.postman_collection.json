@@ -1,0 +1,334 @@
+{
+  "info": {
+    "name": "Guruplay personal API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Local reusable requests. Use a disposable test account. Supply a short-lived token locally; never save tokens in this file. See personal-api.md and scripts/personal-e2e.mjs for authorization and live isolation checks."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "playlistId",
+      "value": ""
+    },
+    {
+      "key": "songId",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Settings",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/me/settings"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Library",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/library"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Playlists",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/playlists"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create private playlist",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/playlists",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"API test playlist\",\n  \"description\": \"Temporary API test\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Playlist detail",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/playlists/{{playlistId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Save song",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/library/songs/{{songId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Add song to playlist",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/playlists/{{playlistId}}/songs/{{songId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reorder playlist",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/playlists/{{playlistId}}/order",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"song_ids\": [\n    \"{{songId}}\"\n  ],\n  \"revision\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Set private session",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/me/settings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"private_session\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support requests",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/support"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Request succeeds with the documented response\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).not.to.have.property(\"error\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
