@@ -2,8 +2,8 @@
 
 ## Services
 
-- The repository-root `vercel.json` deploys the listener from `apps/web/dist` and rewrites all `/api/v1/*` requests to `api/music.mjs`. The adapter restores nested API paths and preserves query parameters and raw webhook bodies. This supports the existing Vercel project whose root directory is the repository root. The admin app remains a separate deployment with root directory `apps/admin`.
-- Deploy `apps/web` and `apps/admin` as separate Vercel projects. Both need the root Supabase URL, public anon key, and server-only service role key. The listener project needs the Paystack secret, plan code, plan amount in the Paystack currency's smallest unit, currency, public app URL, and cron secret.
+- The repository-root `vercel.json` deploys the listener from `apps/web/dist` and rewrites `/api/v1/*` to `api/music.mjs` and `/api/admin/*` to `api/admin.mjs`. The adapters restore nested API paths and preserve query parameters and raw webhook bodies. This supports the existing Vercel project whose root directory is the repository root. The admin app is a separate deployment with root directory `apps/admin` and shared workspace sources enabled.
+- Both projects need the public Supabase URL and anon key. The admin interface proxies API requests to the existing listener server at `www.guruplay.com.ng`; its project does not need a service-role credential. The listener's trusted API environment needs the server-only service role key, Paystack secret, plan code, plan amount in the Paystack currency's smallest unit, currency, public app URL, and cron secret.
 - Build the media worker from `apps/web/Dockerfile.worker` and run `npm run worker:media --workspace=@guruplay/web` in a container with persistent logs and the same Supabase server credentials. The image includes FFmpeg and ffprobe.
 - Register the Paystack webhook URL as `https://<listener-domain>/api/v1/webhooks/paystack`. Use HTTPS and keep webhook signature verification enabled.
 - Configure `MAX_AUDIO_UPLOAD_BYTES` and `MAX_AUDIO_DURATION_SECONDS` to match the product's upload policy. The worker defaults to 200 MB and 15 minutes.

@@ -1,4 +1,4 @@
-import adminHandler from "../server/admin-api.mjs";
+import adminHandler from "./admin-api.mjs";
 import { restoreApiUrl } from "../../web/server/vercel-routing.mjs";
 
 export default function handler(req, res) {
@@ -8,5 +8,3 @@ export default function handler(req, res) {
   });
   return adminHandler(req, res);
 }
-
-export const config = { api: { bodyParser: false } };

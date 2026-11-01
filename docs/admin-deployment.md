@@ -13,4 +13,6 @@ Artist approval remains enforced by the database, through `review_artist_applica
 
 ## Hosting
 
-The separate Vercel project is `eazicred/guruplay-admin`, rooted at `apps/admin` with shared workspace sources enabled. It uses the existing Supabase project. Public Supabase configuration is set. The server-only Production service-role credential requires the separate requested approval before the admin deployment can be completed.
+The separate Vercel project is `eazicred/guruplay-admin`, rooted at `apps/admin` with shared workspace sources enabled. It uses the existing Supabase project and needs only the public URL and anon key. Same-origin API rewrites forward authenticated requests to the existing Guruplay server at `www.guruplay.com.ng`.
+
+Privileged API handlers run in the listener's existing trusted server environment, using its existing server-only credential. The admin project receives no service-role secret. The admin API verifies an active administrator on every request; artist approval also remains enforced by its database RPC. This avoids duplicating the credential in a second project.

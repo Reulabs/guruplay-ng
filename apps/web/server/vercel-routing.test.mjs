@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { restoreApiUrl } from "./vercel-routing.mjs";
 import { createHmac } from "node:crypto";
 import handler from "../../../api/music.mjs";
-import adminHandler from "../../admin/api/admin.mjs";
+import adminHandler from "../../../api/admin.mjs";
 
 test("nested API rewrites retain paths and query parameters", () => {
   assert.equal(
