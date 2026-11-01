@@ -293,7 +293,7 @@ for (const id of profiles)
   );
 const result = {
   testedAt: new Date().toISOString(),
-  environment: "Configured shared Supabase backend",
+  environment: process.env.ADMIN_TEST_BASE_URL || "Configured shared Supabase backend",
   checks,
   cleanup: { temporaryUsersRemaining: 0, temporaryProfilesRemaining: 0 },
 };

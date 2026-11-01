@@ -1,6 +1,6 @@
 {
-  "testedAt": "2026-11-01T07:41:46.463Z",
-  "environment": "Configured shared Supabase backend",
+  "testedAt": "2026-11-01T07:55:24.097Z",
+  "environment": "https://admin.guruplay.com.ng",
   "checks": [
     "Administrator can approve an artist and persist artist eligibility",
     "anonymous cannot approve an artist through the review RPC",
@@ -8,10 +8,29 @@
     "pending cannot approve an artist through the review RPC",
     "artist cannot approve an artist through the review RPC",
     "Listeners, pending artists and approved artists cannot bypass review or grant themselves admin access",
-    "Only an administrator approval makes the pending profile publicly visible"
+    "Only an administrator approval makes the pending profile publicly visible",
+    "Deployed admin API blocks anonymous reads and non-admin reads, edits and promotion",
+    "Deployed admin proxy preserves authenticated listing, filters and persisted account edits",
+    "Deployed support and review-preview routes retain administrator authorization"
   ],
   "cleanup": {
     "temporaryUsersRemaining": 0,
     "temporaryProfilesRemaining": 0
+  },
+  "deployment": {
+    "admin": "dpl_EMgvLZwan9nzYvDPQ8Rwi3NBnu6S",
+    "adminSource": "9acdf88f3b8aa02bd7f61384030e82485925c5b6",
+    "sharedApiSource": "9cb4e7efd4fc3302133e0f15711adf1e992bb8d7",
+    "adminHasServiceRoleSecret": false
+  },
+  "browser": {
+    "administratorUiApprovalPersisted": true,
+    "artistRoleGranted": true,
+    "approvedProfilePubliclyVisible": true,
+    "nonAdminUiRestricted": true,
+    "nonAdminDashboardRedirected": true,
+    "accountSwitchingWorked": true,
+    "temporaryProfilesRemaining": 0,
+    "temporaryUsersRemaining": 0
   }
 }
