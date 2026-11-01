@@ -20,4 +20,12 @@ On 1 November 2026, `https://www.guruplay.com.ng/api/v1/me/settings` returned a 
 
 ## Hosting
 
-The live server needs its existing Supabase service-role credential configured as a server-only Vercel secret and a deployment containing the routing fix. These changes require the requested credential-transfer and deployment approval. No production environment values were downloaded.
+With the user's approval, the existing Supabase service-role credential was configured as a sensitive secret for the Vercel Production environment. No production environment values were downloaded. The exact tested source commit `4153a5a2f96e5b90ecd77c106921e6d1dfea3702` was rebuilt from its existing preview deployment into production on 1 November 2026.
+
+- Deployment: `dpl_GABULPzLK1VDWDrg5M7D1kmJtMQJ`, Ready, aliased to `https://www.guruplay.com.ng` and `https://guruplay.com.ng`.
+- Live unauthenticated health returned 200; settings and library returned readable JSON 401 responses instead of a framework 404.
+- Authenticated settings, library, playlists and subscription reads returned 200.
+- All 14 regression groups passed against the production HTTPS API using disposable accounts and real generated audio. This included settings updates, favourite save/reload/remove, idempotent saves, account isolation and nested playlist mutations. The existing local media worker processed the temporary uploads; this does not establish hosted-worker readiness.
+- The signed-in user's live settings and illustrated favourites page loaded in Chrome without technical errors. The user's profile, preferences and saved songs were not edited during browser verification.
+- All 31 discovered public JavaScript assets were checked; none contained the server credential.
+- Cleanup verification found zero remaining fixture profiles or songs and confirmed that the administrator's original playback preferences were restored. See `settings-favourites-production-status.json`.
