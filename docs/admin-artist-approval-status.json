@@ -1,0 +1,17 @@
+{
+  "testedAt": "2026-11-01T07:41:46.463Z",
+  "environment": "Configured shared Supabase backend",
+  "checks": [
+    "Administrator can approve an artist and persist artist eligibility",
+    "anonymous cannot approve an artist through the review RPC",
+    "listener cannot approve an artist through the review RPC",
+    "pending cannot approve an artist through the review RPC",
+    "artist cannot approve an artist through the review RPC",
+    "Listeners, pending artists and approved artists cannot bypass review or grant themselves admin access",
+    "Only an administrator approval makes the pending profile publicly visible"
+  ],
+  "cleanup": {
+    "temporaryUsersRemaining": 0,
+    "temporaryProfilesRemaining": 0
+  }
+}

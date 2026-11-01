@@ -55,8 +55,8 @@ const Artist = () => {
       <div className="p-4 md:p-8">
         <EmptyState
           icon={UsersRound}
-          title="No approved artists yet"
-          description="Artist profiles appear here after an administrator approves their application."
+          title="No artists here just yet"
+          description="Check back soon to discover new music."
         />
       </div>
     );
@@ -81,7 +81,7 @@ const Artist = () => {
               Artists
             </Typography>
             <Typography variant="body" tone="muted">
-              Browse approved independent artists.
+              Discover independent artists and their music.
             </Typography>
           </div>
           <div className="relative w-full max-w-md">

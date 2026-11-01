@@ -1,5 +1,4 @@
-import { Music2 } from "lucide-react";
-import { AuthMode, useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -11,43 +10,29 @@ import AuthForm from "@/components/auth/AuthForm";
 import Typography from "@guruplay/ui/typography";
 import { DefaultLogo } from "@guruplay/shared/logo";
 
-const copy: Record<AuthMode, { title: string; description: string }> = {
-  login: {
-    title: "Log in to Guruplay",
-    description:
-      "Continue listening, save music, and manage your artist dashboard.",
-  },
-  signup: {
-    title: "Sign up for Guruplay",
-    description: "Create an account to listen, upload, and get featured.",
-  },
-};
-
 const AuthDialog = () => {
-  const { authDialogMode, isAuthDialogOpen, closeAuthDialog, openAuthDialog } =
-    useAuth();
-  const activeCopy = copy[authDialogMode];
+  const { isAuthDialogOpen, closeAuthDialog, openAuthDialog } = useAuth();
 
   return (
     <Dialog
       open={isAuthDialogOpen}
       onOpenChange={(open) =>
-        open ? openAuthDialog(authDialogMode) : closeAuthDialog()
+        open ? openAuthDialog("login") : closeAuthDialog()
       }
     >
       <DialogContent className="max-w-md border-white/10 bg-[#080808] p-6 text-white shadow-2xl sm:rounded-2xl">
         <DialogHeader className="items-center text-center">
-         <DefaultLogo/>
+          <DefaultLogo />
           <DialogTitle asChild>
             <Typography as="h2" variant="h2" weight="bold" align="center">
-              {activeCopy.title}
+              Log in to Guruplay Admin
             </Typography>
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            {activeCopy.description}
+            Review artists and manage music with your administrator account.
           </DialogDescription>
         </DialogHeader>
-        <AuthForm mode={authDialogMode} onModeChange={openAuthDialog} />
+        <AuthForm />
       </DialogContent>
     </Dialog>
   );
