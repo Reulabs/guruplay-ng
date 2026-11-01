@@ -46,18 +46,16 @@ try {
         user_metadata: { display_name: `[TEST] ${kind}` },
       }),
     );
-    const account = { id: auth.user.id, db: client(), kind };
+    const account = { id: auth.user.id, db: client(), kind, email };
     accounts.push(account);
     checked(
-      await service
-        .from("users")
-        .upsert({
-          id: account.id,
-          email,
-          display_name: `[TEST] ${kind}`,
-          user_type: "user",
-          account_status: "active",
-        }),
+      await service.from("users").upsert({
+        id: account.id,
+        email,
+        display_name: `[TEST] ${kind}`,
+        user_type: "user",
+        account_status: "active",
+      }),
     );
     checked(await account.db.auth.signInWithPassword({ email, password }));
     if (kind !== "listener") {
@@ -177,7 +175,102 @@ try {
   checks.push(
     "Only an administrator approval makes the pending profile publicly visible",
   );
+  if (process.env.ADMIN_TEST_BASE_URL) {
+    const origin = new URL(process.env.ADMIN_TEST_BASE_URL);
+    assert.equal(origin.protocol, "https:");
+    assert.ok(
+      ["admin.guruplay.com.ng", "www.guruplay.com.ng"].includes(
+        origin.hostname,
+      ),
+    );
+    const request = async (db, path, expected, method = "GET", body) => {
+      const session = db ? checked(await db.auth.getSession()).session : null;
+      const response = await fetch(new URL(path, origin), {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          ...(session
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        signal: AbortSignal.timeout(25000),
+      });
+      assert.equal(response.status, expected, `${method} ${path}`);
+      return response.json();
+    };
+    const listener = accounts.find((account) => account.kind === "listener");
+    await request(null, "/api/admin/users", 401);
+    await request(listener.db, "/api/admin/users", 403);
+    await request(
+      listener.db,
+      `/api/admin/users/${listener.id}`,
+      403,
+      "PATCH",
+      {
+        email: listener.email,
+        display_name: "[TEST] denied",
+        user_type: "admin",
+      },
+    );
+    assert.equal(
+      checked(
+        await service
+          .from("users")
+          .select("user_type")
+          .eq("id", listener.id)
+          .single(),
+      ).user_type,
+      "user",
+    );
+    checks.push(
+      "Deployed admin API blocks anonymous reads and non-admin reads, edits and promotion",
+    );
+    await request(admin, "/api/admin/overview", 200);
+    const listed = await request(
+      admin,
+      `/api/admin/users?search=${encodeURIComponent(marker)}&page=1`,
+      200,
+    );
+    assert.equal(listed.items.length, 3);
+    await request(admin, `/api/admin/users/${listener.id}`, 200, "PATCH", {
+      email: listener.email,
+      display_name: "[TEST] Admin edited fixture",
+      user_type: "user",
+    });
+    assert.equal(
+      checked(
+        await service
+          .from("users")
+          .select("display_name")
+          .eq("id", listener.id)
+          .single(),
+      ).display_name,
+      "[TEST] Admin edited fixture",
+    );
+    checks.push(
+      "Deployed admin proxy preserves authenticated listing, filters and persisted account edits",
+    );
+    await request(listener.db, "/api/v1/support/admin", 403);
+    await request(admin, "/api/v1/support/admin", 200);
+    const songId = randomUUID();
+    await request(listener.db, `/api/v1/admin/songs/${songId}/preview`, 403);
+    await request(admin, `/api/v1/admin/songs/${songId}/preview`, 404);
+    checks.push(
+      "Deployed support and review-preview routes retain administrator authorization",
+    );
+  }
 } finally {
+  if (accounts.length)
+    checked(
+      await service
+        .from("admin_audit_log")
+        .delete()
+        .in(
+          "target_id",
+          accounts.map((account) => account.id),
+        ),
+    );
   for (const id of profiles)
     checked(await service.from("artist_profiles").delete().eq("id", id));
   for (const account of accounts) {

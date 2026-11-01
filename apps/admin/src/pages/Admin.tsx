@@ -65,7 +65,7 @@ const formatDate = (value?: string) =>
     : "Unknown";
 
 const Admin = () => {
-  const { isAuthenticated, isAuthLoading, openAuthDialog } = useAuth();
+  const { isAuthenticated, isAuthLoading, openAuthDialog, logout } = useAuth();
   const {
     isAdmin,
     loading,
@@ -86,6 +86,7 @@ const Admin = () => {
   const [previewError, setPreviewError] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [switchingAccount, setSwitchingAccount] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     title: string;
@@ -264,9 +265,32 @@ const Admin = () => {
               Admin access is currently unavailable.
             </Typography>
           )}
-          <Button asChild className="mt-6 rounded-full px-6 font-bold">
-            <Link to="/">Go home</Link>
+          <Button
+            className="mt-6 rounded-full px-6 font-bold"
+            disabled={switchingAccount}
+            onClick={async () => {
+              setSwitchingAccount(true);
+              try {
+                await logout();
+                openAuthDialog("login");
+              } catch {
+                toast({
+                  title: "We couldn’t sign you out",
+                  description: "Please try again.",
+                });
+              } finally {
+                setSwitchingAccount(false);
+              }
+            }}
+          >
+            {switchingAccount ? "Signing out…" : "Use a different account"}
           </Button>
+          <a
+            href="https://www.guruplay.com.ng"
+            className="mt-4 block text-sm text-muted-foreground underline underline-offset-4"
+          >
+            Back to Guruplay
+          </a>
         </div>
       </div>
     );
@@ -623,12 +647,8 @@ const Admin = () => {
                   <TableBody>
                     {activity.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>
-                          {renderStatus(item.action)}
-                        </TableCell>
-                        <TableCell>
-                          {item.target_id || "Platform"}
-                        </TableCell>
+                        <TableCell>{renderStatus(item.action)}</TableCell>
+                        <TableCell>{item.target_id || "Platform"}</TableCell>
                         <TableCell className="font-mono text-xs text-white/55">
                           {item.actor_id || "System"}
                         </TableCell>
