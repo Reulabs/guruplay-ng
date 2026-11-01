@@ -18,6 +18,8 @@ import { supabase } from "@/lib/supabase";
 import { PlaybackEventType, PlaybackState } from "@guruplay/common/music";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/hooks/use-subscription";
+import { readApiResponse } from "@guruplay/common/http";
+import { z } from "zod";
 
 interface PlayerContextType {
   currentTrack: Track | null;
@@ -27,6 +29,7 @@ interface PlayerContextType {
   showUpgrade: boolean;
   checkoutLoading: boolean;
   likedTrackIds: ReadonlySet<string>;
+  isSavingSong: boolean;
   progress: number;
   duration: number;
   volume: number;
@@ -89,6 +92,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const library = useLibrary();
   const settings = useSettings();
   const mutation = usePersonalMutation();
+  const savingSongRef = useRef(false);
+  const isSavingSong =
+    mutation.isPending || (isAuthenticated && library.isPending);
   const { toast } = useToast();
   const likedTrackIds = useMemo(
     () =>
@@ -436,12 +442,19 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         method: "POST",
         headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
-      const result = await response.json();
-      if (!response.ok || typeof result.authorizationUrl !== "string")
-        throw new Error(result.error || "Unable to start payment.");
+      const result = z
+        .object({ authorizationUrl: z.string().url() })
+        .safeParse(
+          await readApiResponse(
+            response,
+            "We couldn’t start checkout. Please try again shortly.",
+          ),
+        );
+      if (!result.success)
+        throw new Error("We couldn’t open checkout. Please try again shortly.");
       if (currentTrack)
         sessionStorage.setItem("guruplay-return-track", currentTrack.id);
-      window.location.assign(result.authorizationUrl);
+      window.location.assign(result.data.authorizationUrl);
     } finally {
       setCheckoutLoading(false);
     }
@@ -453,7 +466,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         openAuthDialog("login");
         return;
       }
-      if (mutation.isPending) return;
+      if (savingSongRef.current || mutation.isPending || library.isPending)
+        return;
       if (library.error) {
         toast({
           title: "Could not load saved songs",
@@ -462,6 +476,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
       const liked = likedTrackIds.has(trackId);
+      savingSongRef.current = true;
       void mutation
         .mutateAsync({
           path: `library/songs/${trackId}`,
@@ -469,15 +484,27 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         })
         .then(() => {
           void record(liked ? "unlike" : "like", trackId);
+          toast({
+            title: liked ? "Removed from favourites" : "Added to favourites",
+          });
         })
         .catch((error: Error) =>
-          toast({ title: "Could not save song", description: error.message }),
-        );
+          toast({
+            title: liked
+              ? "Could not remove favourite"
+              : "Could not save favourite",
+            description: error.message,
+          }),
+        )
+        .finally(() => {
+          savingSongRef.current = false;
+        });
     },
     [
       isAuthenticated,
       likedTrackIds,
       library.error,
+      library.isPending,
       mutation,
       openAuthDialog,
       record,
@@ -499,6 +526,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     showUpgrade: showUpgrade && !isPremium,
     checkoutLoading,
     likedTrackIds,
+    isSavingSong,
     progress,
     duration,
     volume,

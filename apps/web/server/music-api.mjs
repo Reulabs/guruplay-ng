@@ -14,7 +14,7 @@ const json = (res, status, value) => {
 const getConfig = () => {
   const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, PAYSTACK_SECRET_KEY } = process.env;
   if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw Object.assign(new Error('The trusted music API is not configured.'), { status: 503 });
+    throw Object.assign(new Error('Guruplay is temporarily unavailable. Please try again shortly.'), { status: 503 });
   }
   return { url: VITE_SUPABASE_URL, anon: VITE_SUPABASE_ANON_KEY, serviceKey: SUPABASE_SERVICE_ROLE_KEY, paystackKey: PAYSTACK_SECRET_KEY };
 };

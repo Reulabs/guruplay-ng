@@ -31,6 +31,7 @@ function Contents() {
   if (settings.error)
     return (
       <ErrorState
+        title="We couldn’t load your settings"
         description={settings.error.message}
         onRetry={() => void settings.refetch()}
       />

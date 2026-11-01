@@ -12,10 +12,12 @@ import {
 import {
   Playlist,
   personalRequest,
+  playlistSchema,
   usePersonalMutation,
 } from "@/hooks/use-personal";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
+import { z } from "zod";
 export default function PlaylistForm({
   open,
   onClose,
@@ -46,8 +48,9 @@ export default function PlaylistForm({
           body: { name, description },
         });
       else {
-        const result = await personalRequest<{ item: Playlist }>(
+        const result = await personalRequest(
           "playlists",
+          z.object({ item: playlistSchema }),
           "POST",
           { name, description },
         );

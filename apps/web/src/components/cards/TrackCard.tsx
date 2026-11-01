@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Pause, MoreHorizontal, Music2 } from "lucide-react";
+import { Play, Pause, MoreHorizontal, Music2, Heart } from "lucide-react";
 import { Track } from "@/types/music";
 import { usePlayer } from "@/context/PlayerContext";
 import { useAuth } from "@/context/AuthContext";
@@ -42,6 +42,7 @@ const TrackCard = ({
     play,
     pause,
     likedTrackIds,
+    isSavingSong,
     toggleLike,
     addToQueue,
   } = usePlayer();
@@ -77,7 +78,10 @@ const TrackCard = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={() => toggleLike(track.id)}>
+        <DropdownMenuItem
+          disabled={isSavingSong}
+          onSelect={() => toggleLike(track.id)}
+        >
           {likedTrackIds.has(track.id)
             ? "Remove from saved songs"
             : "Save song"}
@@ -213,6 +217,30 @@ const TrackCard = ({
             {track.genre || "Uncategorized"}
           </p>
           <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              disabled={isSavingSong}
+              aria-label={
+                likedTrackIds.has(track.id)
+                  ? `Remove ${track.title} from favourites`
+                  : `Add ${track.title} to favourites`
+              }
+              aria-pressed={likedTrackIds.has(track.id)}
+              onClick={() => toggleLike(track.id)}
+              className={
+                likedTrackIds.has(track.id)
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              }
+            >
+              <Heart
+                className={cn(
+                  "h-4 w-4",
+                  likedTrackIds.has(track.id) && "fill-current",
+                )}
+              />
+            </Button>
             <span className="hidden sm:block text-xs tabular-nums text-muted-foreground">
               {Math.floor(track.duration / 60)}:
               {Math.floor(track.duration % 60)

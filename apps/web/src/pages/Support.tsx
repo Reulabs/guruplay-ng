@@ -9,7 +9,7 @@ import EmptyState from "@guruplay/shared/fallbacks/EmptyState";
 import PersonalGate from "@/components/PersonalGate";
 import {
   personalRequest,
-  Ticket,
+  ticketsSchema,
   usePersonalMutation,
 } from "@/hooks/use-personal";
 import { useAuth } from "@/context/AuthContext";
@@ -17,7 +17,8 @@ function Contents() {
   const { user } = useAuth();
   const query = useQuery({
     queryKey: ["personal", user?.id, "support"],
-    queryFn: () => personalRequest<{ items: Ticket[] }>("support"),
+    queryFn: ({ signal }) =>
+      personalRequest("support", ticketsSchema, "GET", undefined, signal),
   });
   const mutation = usePersonalMutation();
   const [subject, setSubject] = useState("");

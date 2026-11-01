@@ -4,6 +4,7 @@
   "buildCommand": "npm run build:web",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
+    { "source": "/api/v1/:path*", "destination": "/api/music?__route=:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
