@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./errors": "./src/errors.ts",
+    "./http": "./src/http.ts",
     "./subscription": "./src/subscription.ts",
     "./brand": "./src/brand.ts",
     "./music": "./src/music.ts",

@@ -4,7 +4,12 @@ import { getAppError } from "@guruplay/common/errors";
 import { isSupabaseConfigured, Song, supabase } from "@/lib/supabase";
 import { Artist, Track } from "@/types/music";
 
-export const toTrack = (song: Song): Track => ({
+export const toTrack = (
+  song: Omit<
+    Song,
+    "approval_status" | "reviewed_at" | "reviewed_by" | "updated_at"
+  >,
+): Track => ({
   id: song.id,
   userId: song.user_id,
   title: song.title,
@@ -12,7 +17,9 @@ export const toTrack = (song: Song): Track => ({
   duration: song.duration || 0,
   coverUrl: song.cover_url,
   previewUrl: song.preview_object_path
-    ? supabase.storage.from("song-previews").getPublicUrl(song.preview_object_path).data.publicUrl
+    ? supabase.storage
+        .from("song-previews")
+        .getPublicUrl(song.preview_object_path).data.publicUrl
     : "",
   availability: "ready",
   genre: song.genre,
@@ -30,7 +37,11 @@ export const useCatalog = () =>
       }
 
       const [songsResult, artistsResult] = await Promise.all([
-        supabase.from("public_catalog").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase
+          .from("public_catalog")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(500),
         supabase
           .from("artist_profiles")
           .select("*")

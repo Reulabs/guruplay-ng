@@ -1,0 +1,21 @@
+{
+  "testedAt": "2026-11-01T06:48:03.012Z",
+  "project": "fuquclbwwofwugkxirrl",
+  "environment": "local app with real Supabase",
+  "checks": [
+    "anonymous personal data denied",
+    "active listener, pending artist, approved artist and admin can load personal settings",
+    "settings reject privilege fields and invalid volume",
+    "profile and playback settings persisted",
+    "saved songs idempotent, persisted, isolated and removable",
+    "playlist order persisted; duplicates and stale revisions rejected",
+    "cross-account reads, edits, delete, membership RPC and direct RLS denied",
+    "unpublished tracks hidden and cannot be saved or added",
+    "playlist edit, remove song and delete persisted",
+    "listening history, server-enforced private session, recommendations and history clearing",
+    "support request, admin response and owner isolation",
+    "only admin receives review audio",
+    "paused account API and direct database writes denied",
+    "approved artist cannot moderate"
+  ]
+}

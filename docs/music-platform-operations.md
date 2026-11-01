@@ -2,7 +2,7 @@
 
 ## Services
 
-- The repository-root `vercel.json` deploys the listener from `apps/web/dist` and exposes its existing API through `api/v1/[...path].mjs`. This supports the existing Vercel project whose root directory is the repository root. The admin app remains a separate deployment with root directory `apps/admin`.
+- The repository-root `vercel.json` deploys the listener from `apps/web/dist` and rewrites all `/api/v1/*` requests to `api/music.mjs`. The adapter restores nested API paths and preserves query parameters and raw webhook bodies. This supports the existing Vercel project whose root directory is the repository root. The admin app remains a separate deployment with root directory `apps/admin`.
 - Deploy `apps/web` and `apps/admin` as separate Vercel projects. Both need the root Supabase URL, public anon key, and server-only service role key. The listener project needs the Paystack secret, plan code, plan amount in the Paystack currency's smallest unit, currency, public app URL, and cron secret.
 - Build the media worker from `apps/web/Dockerfile.worker` and run `npm run worker:media --workspace=@guruplay/web` in a container with persistent logs and the same Supabase server credentials. The image includes FFmpeg and ffprobe.
 - Register the Paystack webhook URL as `https://<listener-domain>/api/v1/webhooks/paystack`. Use HTTPS and keep webhook signature verification enabled.

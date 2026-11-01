@@ -48,6 +48,7 @@ const PlayerBar = () => {
     startSubscription,
     state,
     likedTrackIds,
+    isSavingSong,
     toggleLike,
     progress,
     duration,
@@ -199,6 +200,7 @@ const PlayerBar = () => {
                 liked ? "Remove from saved songs" : "Save current song"
               }
               aria-pressed={liked}
+              disabled={isSavingSong}
               onClick={() => toggleLike(currentTrack.id)}
               className={cn(
                 "hidden sm:flex p-2 transition-colors",

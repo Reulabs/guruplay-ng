@@ -1,6 +1,8 @@
-import { CircleAlert } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@guruplay/ui/button";
 import Typography from "@guruplay/ui/typography";
+import { feedbackMessage } from "@guruplay/common/http";
+import FeedbackIllustration from "./FeedbackIllustration";
 
 interface ErrorStateProps {
   title?: string;
@@ -9,19 +11,25 @@ interface ErrorStateProps {
 }
 
 const ErrorState = ({
-  title = "Unable to load this content",
+  title = "A little interruption",
   description,
   onRetry,
 }: ErrorStateProps) => (
-  <div className="flex min-h-64 flex-col items-center justify-center rounded-3xl border border-red-400/15 bg-red-400/[0.04] px-6 py-12 text-center">
-    <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-red-400/10 text-red-200">
-      <CircleAlert className="h-6 w-6" />
-    </div>
-    <Typography as="h2" variant="h3" weight="bold">
+  <div
+    role="status"
+    className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.015] px-6 py-10 text-center sm:py-12"
+  >
+    <FeedbackIllustration />
+    <Typography as="h2" variant="h3" weight="semibold" align="center">
       {title}
     </Typography>
-    <Typography variant="body" tone="muted" className="mt-2 max-w-md">
-      {description}
+    <Typography
+      variant="body"
+      tone="muted"
+      align="center"
+      className="mt-2 max-w-sm text-pretty"
+    >
+      {feedbackMessage(description)}
     </Typography>
     {onRetry && (
       <Button
@@ -29,6 +37,7 @@ const ErrorState = ({
         onClick={onRetry}
         className="mt-6 rounded-full border-white/10 px-6"
       >
+        <RefreshCw className="mr-2 h-3.5 w-3.5" />
         Try again
       </Button>
     )}

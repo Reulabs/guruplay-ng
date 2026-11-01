@@ -91,10 +91,17 @@ function Contents() {
         <LoadingState />
       ) : error ? (
         <ErrorState
+          title={
+            view === "playlists"
+              ? "We couldn’t load your playlists"
+              : view === "history"
+                ? "We couldn’t load your listening history"
+                : "We couldn’t load your favourites"
+          }
           description={error.message}
           onRetry={() => {
-            void library.refetch();
-            void playlists.refetch();
+            if (view === "playlists") void playlists.refetch();
+            else void library.refetch();
           }}
         />
       ) : view === "playlists" ? (
