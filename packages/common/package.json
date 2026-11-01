@@ -1,0 +1,19 @@
+{
+  "name": "@guruplay/common",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./errors": "./src/errors.ts",
+    "./subscription": "./src/subscription.ts",
+    "./brand": "./src/brand.ts",
+    "./music": "./src/music.ts",
+    "./utils": "./src/utils.ts",
+    "./scripts/seed-admin": "./scripts/seed-admin.mjs"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0",
+    "@supabase/supabase-js": "^2.87.3"
+  }
+}

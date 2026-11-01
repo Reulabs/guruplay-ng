@@ -1,0 +1,146 @@
+{
+  "date": "2026-10-19",
+  "environment": "local application, Paystack test mode",
+  "payment_keys": {
+    "public": "configured in ignored root .env",
+    "secret": "configured server-only in ignored root .env",
+    "provider_auth": "Paystack GET /plan returned HTTP 200",
+    "plans": {
+      "code": "PLN_8obho3fastoktts",
+      "amount_subunits": 100000,
+      "currency": "NGN",
+      "interval": "monthly",
+      "domain": "test",
+      "provider_verified": true
+    }
+  },
+  "services": {
+    "listener": "http://127.0.0.1:8080",
+    "admin": "http://127.0.0.1:8081",
+    "media_worker": "running"
+  },
+  "blockers": [],
+  "automated_checks": {
+    "lint": "both apps passed with 4 existing React refresh warnings",
+    "typecheck": "both apps passed after changes",
+    "build": "both apps passed after billing changes",
+    "tests": "6 tests passed",
+    "browser_bundle_secrets": "Both server credentials absent; unrelated backend absent"
+  },
+  "end_to_end": "Passed: application sign-in, hosted Paystack test checkout, server verification, persisted recurring subscription, media upload and processing, anonymous preview cutoff, paid full playback",
+  "local_api_checks": {
+    "passed": 6,
+    "checks": [
+      "health 200",
+      "checkout without authentication 401",
+      "verification without authentication 401",
+      "subscription without authentication 401",
+      "unsigned webhook 401",
+      "reconciliation without authentication 401"
+    ]
+  },
+  "postman_checks": [
+    {
+      "check": "health",
+      "assertions_passed": 1,
+      "exit_code": 0
+    },
+    {
+      "check": "unsigned webhook rejection",
+      "assertions_passed": 1,
+      "exit_code": 1,
+      "note": "Expected HTTP 401; assertion passed, CLI still returned 1"
+    }
+  ],
+  "browser_checks": {
+    "passed": [
+      "Signed in through listener UI",
+      "Started hosted checkout from subscription page",
+      "Paystack TEST checkout displayed NGN 1,000",
+      "Completed Paystack Success test scenario",
+      "Returned to app; server verified payment and displayed active subscription",
+      "Uploaded a clearly labeled 45-second WAV test tone through dashboard",
+      "Media worker completed job on first attempt",
+      "Anonymous player served 30-second preview and displayed upgrade dialog on completion",
+      "Paid account displayed Full track and allowed seeking to 35 seconds of 45",
+      "Administrator signed in through admin UI and dashboard loaded"
+    ],
+    "mobile": "Chrome verified at actual 390x844 viewport; content width 390, no horizontal overflow",
+    "evidence": [
+      "payment-test-checkout.png",
+      "payment-test-verified.png",
+      "payment-preview-cutoff.png",
+      "payment-paid-playback.png",
+      "payment-subscription-desktop.png",
+      "payment-subscription-mobile.png"
+    ]
+  },
+  "changes": [
+    "Saved provided public and secret test keys in ignored root .env",
+    "Configured loopback test callback and generated server-only reconciliation secret",
+    "Allowed HTTP loopback callbacks with test secret keys only",
+    "Used Paystack-compatible transaction references",
+    "Validated amount, currency, account, reference and plan consistently for verification, webhooks and reconciliation",
+    "Added support for Paystack plan_object in verification responses",
+    "Subscription page checks actual account status, supports starting checkout and verifies payment before claiming access",
+    "Created and configured monthly Paystack test plan at NGN 1000",
+    "Linked separately returned Paystack subscriptions to verified transactions using customer, authorization, plan, environment and creation time",
+    "Blocked checkout for an account with an active entitlement",
+    "Applied the three missing migrations to the intended project through Brave"
+  ],
+  "backend": {
+    "project": "guruplay",
+    "projectRef": "fuquclbwwofwugkxirrl",
+    "confirmedByUser": true,
+    "credentials": "Original project credentials restored in ignored root .env",
+    "dashboard": "Restoration completed; project healthy; confirmed in Brave",
+    "otherProject": "No migrations or data changes applied to woodenkbd",
+    "migrations_applied": [
+      "20260627120000_add_song_moderation.sql",
+      "20260909120000_admin_console.sql",
+      "20260924120000_secure_streaming_billing_recommendations.sql"
+    ],
+    "migration_history": "All nine project migrations recorded remotely; existing accounts and artist data preserved"
+  },
+  "transaction": {
+    "reference": "guru-1792387361190-7b827741846a42f7b77f1495ed65bcee",
+    "provider_transaction_id": 6672804364,
+    "domain": "test",
+    "status": "success",
+    "amount_subunits": 100000,
+    "currency": "NGN",
+    "checkout_status": "verified",
+    "subscription_code": "SUB_y4b6h6z0d11cjuu",
+    "subscription_status": "active",
+    "paid_through": "2026-11-19T05:23:00Z"
+  },
+  "authenticated_api_checks": {
+    "paid_subscription": 200,
+    "duplicate_checkout": 409,
+    "unknown_reference": 404,
+    "paid_stream_session": 200,
+    "signed_audio": 200,
+    "public_preview": 200,
+    "unauthenticated_full_audio": 400
+  },
+  "test_fixture": {
+    "title": "[TEST] Guruplay payment E2E tone",
+    "duration_seconds": 45,
+    "preview_seconds": 30,
+    "source": "Locally generated low-volume sine tone",
+    "cleanup": "Removed test song, original upload, normalized audio and preview through authenticated admin API and scoped storage cleanup",
+    "cleanup_verified": true,
+    "admin_delete_http_status": 200
+  },
+  "not_verified": [
+    "Real provider webhook delivery to a public deployment (local callback verification passed)",
+    "A scheduled monthly renewal or production payment",
+    "Subscription-management email delivery",
+    "Exhaustive artist/listener/admin permission matrix"
+  ],
+  "remaining_feature_gaps": [
+    "Library saving and playlists are placeholder pages",
+    "Support, private session and settings menu actions are not implemented",
+    "Admin Upload song link targets /dashboard, which is not registered in the admin app"
+  ]
+}

@@ -1,0 +1,16 @@
+# Library, playlists and account API
+
+All routes are under `/api/v1`. They require a valid Bearer session and an active account; no caller may supply an owner ID. JSON bodies reject unknown fields. Errors use `{error:string}` with 400 invalid input, 401 expired/missing session, 403 inactive account, 404 missing or another owner's resource, 409 stale playlist revision, and 503 unavailable storage.
+
+- `GET /me/settings`: `{display_name,preferences:{volume,autoplay,private_session}}`. `PATCH` accepts any of these preference fields and/or `display_name` (1–80 trimmed characters). Email and account role cannot be edited here. Preferences persist between devices.
+- `GET /library`: `{saved:[public catalog songs],history:[public catalog songs plus played_at]}`. History is the last 100 distinct tracks started. `PUT /library/songs/:uuid` saves a published, processed song idempotently; `DELETE` removes it. `DELETE /library/history` clears personal playback events and recommendation caches.
+- `GET /playlists`: `{items:[{id,name,description,revision,created_at}]}`. `POST` creates a private playlist with name (1–80) and description (0–500), returning `{item}`.
+- `GET /playlists/:uuid`: `{item,tracks:[public catalog songs]}`; unpublished/removed tracks are omitted. `PATCH` edits name/description. `DELETE` deletes the playlist and memberships.
+- `PUT /playlists/:uuid/songs/:uuid` adds a published song once. `DELETE` removes it. `PUT /playlists/:uuid/order` accepts `{song_ids:uuid[],revision:integer}` and atomically requires the current revision and exact membership. Playlist mutations lock the playlist row and advance its revision.
+- `GET /support`: `{items:[own tickets]}`. `POST` accepts `{subject,message}` (1–120 and 10–4000 characters). Ticket state and response are administrator controlled. Admins can list tickets and respond using `/api/v1/support/admin` and `PATCH /api/v1/support/admin/:uuid` with `{response,status:open|resolved}`.
+
+Database RLS independently limits settings, saved songs, playlists and memberships to their active owner. Membership writes use an ownership checked RPC. Support tickets are readable only by their owner or admins; creation and administrator responses go through the trusted API. Public song metadata always comes from `public_catalog`. Private sessions suppress personal listening events and use non-personalized recommendations. Saving music remains available during private sessions.
+
+`artist_listening_metrics()` is an authenticated, owner-scoped Supabase RPC used by both upload dashboards. It returns qualified full-play session counts, distinct listeners, mean listened seconds, saved-song counts and a seven-day series. It rejects anonymous/inactive callers and aggregates only songs owned by `auth.uid()`. Saved-like aggregates use `saved_songs`, so a private session or clearing history cannot erase a saved like. `/api/v1/admin/songs/:uuid/preview` is an admin-only GET returning a five-minute review URL.
+
+Library responses currently include up to 2,000 saved tracks, 100 distinct recent tracks from the latest 1,000 start events, and up to 500 private playlists. Each playlist supports 500 songs. Support lists return the latest 100 requests. These limits bound queries; the app does not advertise offline downloads, album purchases or public playlist sharing.

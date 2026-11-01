@@ -1,0 +1,17 @@
+{
+  "testedAt": "2026-10-31T20:14:14.886Z",
+  "providerMode": "Paystack test",
+  "existingSuccessfulPaymentRecovered": true,
+  "recoveredCheckoutVerified": true,
+  "recoveredSubscriptionActive": true,
+  "callbackDashboardRedirectObserved": true,
+  "paidBannerHidden": true,
+  "premiumBadgeObserved": true,
+  "unpaidBannerPreserved": true,
+  "unpaidCallbackDidNotGrantPremium": true,
+  "foreignCheckoutDenied": true,
+  "originalSubscriberUnchanged": true,
+  "temporaryAccountRemoved": true,
+  "newCheckoutCreated": false,
+  "repeatCallbackDidNotMutateSubscriptions": true
+}

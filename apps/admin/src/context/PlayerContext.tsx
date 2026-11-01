@@ -1,0 +1,298 @@
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
+import { Track } from "@/types/music";
+import { useAuth } from "@/context/AuthContext";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+
+interface PlayerContextType {
+  currentTrack: Track | null;
+  isPlaying: boolean;
+  progress: number;
+  duration: number;
+  volume: number;
+  queue: Track[];
+  shuffle: boolean;
+  repeat: "off" | "all" | "one";
+  play: (track?: Track) => void;
+  pause: () => void;
+  toggle: () => void;
+  next: () => void;
+  previous: () => void;
+  seek: (time: number) => void;
+  setVolume: (volume: number) => void;
+  addToQueue: (track: Track) => void;
+  removeFromQueue: (trackId: string) => void;
+  clearQueue: () => void;
+  playPlaylist: (tracks: Track[], startIndex?: number) => void;
+  toggleShuffle: () => void;
+  toggleRepeat: () => void;
+}
+
+const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
+
+export const usePlayer = () => {
+  const context = useContext(PlayerContext);
+  if (!context) {
+    throw new Error("usePlayer must be used within a PlayerProvider");
+  }
+  return context;
+};
+
+export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { isAuthenticated } = useAuth();
+  const requireAuth = useRequireAuth();
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolumeState] = useState(0.7);
+  const [queue, setQueue] = useState<Track[]>([]);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState<"off" | "all" | "one">("off");
+  const [originalQueue, setOriginalQueue] = useState<Track[]>([]);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const nextRef = useRef<() => void>(() => undefined);
+  const repeatRef = useRef(repeat);
+  const volumeRef = useRef(volume);
+
+  const requireLogin = useCallback(() => {
+    const canPlay = requireAuth({
+      title: "Log in to listen",
+      description: "You need to be logged in before playing songs.",
+    });
+
+    if (!canPlay) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsPlaying(false);
+    }
+
+    return canPlay;
+  }, [requireAuth]);
+
+  useEffect(() => {
+    audioRef.current = new Audio();
+    audioRef.current.volume = volumeRef.current;
+
+    const audio = audioRef.current;
+
+    const handleTimeUpdate = () => {
+      setProgress(audio.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+
+    const handleEnded = () => {
+      if (repeatRef.current === "one") {
+        audio.currentTime = 0;
+        void audio.play().catch(() => setIsPlaying(false));
+      } else {
+        nextRef.current();
+      }
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("ended", handleEnded);
+      audio.pause();
+    };
+  }, []);
+
+  useEffect(() => { repeatRef.current = repeat; }, [repeat]);
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
+
+  useEffect(() => {
+    if (audioRef.current && currentTrack) {
+      audioRef.current.src = currentTrack.previewUrl;
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    }
+  }, [currentTrack]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (!isAuthenticated && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [isAuthenticated]);
+
+  const play = useCallback(
+    (track?: Track) => {
+      if (!requireLogin()) return;
+
+      if (track) {
+        if (currentTrack?.id === track.id && audioRef.current) {
+          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          return;
+        }
+        setCurrentTrack(track);
+        setIsPlaying(true);
+      } else if (currentTrack && audioRef.current) {
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
+    },
+    [currentTrack, requireLogin],
+  );
+
+  const pause = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }, [isPlaying, play, pause]);
+
+  const next = useCallback(() => {
+    if (!requireLogin()) return;
+
+    if (queue.length === 0) {
+      if (repeat === "all" && originalQueue.length > 0) {
+        setQueue(
+          shuffle ? shuffleArray([...originalQueue]) : [...originalQueue],
+        );
+        const nextTrack = shuffle
+          ? shuffleArray([...originalQueue])[0]
+          : originalQueue[0];
+        play(nextTrack);
+      }
+      return;
+    }
+
+    const nextTrack = queue[0];
+    setQueue((prev) => prev.slice(1));
+    play(nextTrack);
+  }, [queue, repeat, originalQueue, shuffle, play, requireLogin]);
+
+  useEffect(() => { nextRef.current = next; }, [next]);
+
+  const previous = useCallback(() => {
+    if (audioRef.current && audioRef.current.currentTime > 3) {
+      audioRef.current.currentTime = 0;
+    } else {
+      // For simplicity, just restart current track
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+    }
+  }, []);
+
+  const seek = useCallback((time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setProgress(time);
+    }
+  }, []);
+
+  const setVolume = useCallback((newVolume: number) => {
+    setVolumeState(newVolume);
+  }, []);
+
+  const addToQueue = useCallback((track: Track) => {
+    setQueue((prev) => [...prev, track]);
+  }, []);
+
+  const removeFromQueue = useCallback((trackId: string) => {
+    setQueue((prev) => prev.filter((t) => t.id !== trackId));
+  }, []);
+
+  const clearQueue = useCallback(() => {
+    setQueue([]);
+  }, []);
+
+  const playPlaylist = useCallback(
+    (tracks: Track[], startIndex = 0) => {
+      if (!requireLogin()) return;
+      if (tracks.length === 0) return;
+
+      const tracksToPlay = shuffle ? shuffleArray([...tracks]) : [...tracks];
+      setOriginalQueue(tracks);
+
+      const firstTrack = shuffle ? tracksToPlay[0] : tracks[startIndex];
+      const remainingTracks = shuffle
+        ? tracksToPlay.slice(1)
+        : [...tracks.slice(startIndex + 1), ...tracks.slice(0, startIndex)];
+
+      setQueue(remainingTracks);
+      play(firstTrack);
+    },
+    [shuffle, play, requireLogin],
+  );
+
+  const toggleShuffle = useCallback(() => {
+    setShuffle((prev) => !prev);
+  }, []);
+
+  const toggleRepeat = useCallback(() => {
+    setRepeat((prev) => {
+      if (prev === "off") return "all";
+      if (prev === "all") return "one";
+      return "off";
+    });
+  }, []);
+
+  const value = {
+    currentTrack,
+    isPlaying,
+    progress,
+    duration,
+    volume,
+    queue,
+    shuffle,
+    repeat,
+    play,
+    pause,
+    toggle,
+    next,
+    previous,
+    seek,
+    setVolume,
+    addToQueue,
+    removeFromQueue,
+    clearQueue,
+    playPlaylist,
+    toggleShuffle,
+    toggleRepeat,
+  };
+
+  return (
+    <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
+  );
+};
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}

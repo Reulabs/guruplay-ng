@@ -1,0 +1,15 @@
+{
+  "testedAt": "2026-10-31T16:34:01.988Z",
+  "project": "fuquclbwwofwugkxirrl",
+  "environment": "local app with real Supabase",
+  "checks": [
+    "anonymous, listener and pending artist uploads denied",
+    "invalid upload identifier, empty genre and foreign paths rejected",
+    "same-owner retry returned the original durable upload without duplicates",
+    "changed retry details and another uploader cannot reuse the upload identifier",
+    "real browser upload processed once and remains hidden while awaiting moderation",
+    "browser admin approval persisted and made the processed song public",
+    "browser saved-song, playlist creation and membership persisted",
+    "browser profile settings persisted"
+  ]
+}
