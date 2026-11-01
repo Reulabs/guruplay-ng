@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { restoreApiUrl } from "./vercel-routing.mjs";
 import { createHmac } from "node:crypto";
 import handler from "../../../api/music.mjs";
+import adminHandler from "../../../api/admin.mjs";
 
 test("nested API rewrites retain paths and query parameters", () => {
   assert.equal(
@@ -24,6 +25,53 @@ test("nested API rewrites retain paths and query parameters", () => {
     "/api/v1/me/settings",
   );
   assert.equal(restoreApiUrl("/api/v1/health"), "/api/v1/health");
+});
+
+test("admin rewrites retain nested paths, pagination and filters", () => {
+  assert.equal(
+    restoreApiUrl("/api/admin?__route=users/123&search=Alice&page=2", {
+      apiPrefix: "/api/admin/",
+      functionPath: "/api/admin",
+    }),
+    "/api/admin/users/123?search=Alice&page=2",
+  );
+  assert.equal(
+    restoreApiUrl("/api/admin/users/123?__route=users/123", {
+      apiPrefix: "/api/admin/",
+      functionPath: "/api/admin",
+    }),
+    "/api/admin/users/123",
+  );
+});
+
+test("the admin adapter requires authentication for nested management requests", async () => {
+  const keys = ["VITE_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
+  const previous = Object.fromEntries(
+    keys.map((key) => [key, process.env[key]]),
+  );
+  Object.assign(process.env, {
+    VITE_SUPABASE_URL: "https://test.invalid",
+    SUPABASE_SERVICE_ROLE_KEY: "test-service",
+  });
+  try {
+    const res = {
+      statusCode: 0,
+      setHeader() {},
+      end(body) {
+        this.body = JSON.parse(body);
+      },
+    };
+    await adminHandler(
+      { url: "/api/admin?__route=users/123", method: "DELETE", headers: {} },
+      res,
+    );
+    assert.equal(res.statusCode, 401);
+    assert.equal(res.body.error, "Sign in to continue.");
+  } finally {
+    for (const key of keys)
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
+  }
 });
 
 test("the deployed adapter handles nested authenticated routes without a framework 404", async () => {
