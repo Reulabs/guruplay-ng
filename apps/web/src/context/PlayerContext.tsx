@@ -413,21 +413,35 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [volume]);
 
   useEffect(() => {
-    if (
-      isAuthenticated ||
-      !sessionRef.current ||
-      !currentTrack ||
-      !audioRef.current
-    )
+    if (!sessionRef.current || !currentTrack || !audioRef.current) return;
+    const downgrade = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      generationRef.current += 1;
+      audio.pause();
+      audio.src = currentTrack.previewUrl;
+      audio.load();
+      sessionRef.current = undefined;
+      setIsPreview(true);
+      setState("paused");
+      setProgress(0);
+      setShowUpgrade(isAuthenticated && !isAuthDialogOpen);
+    };
+    if (!isAuthenticated || (subscription.isSuccess && !isPremium)) {
+      downgrade();
       return;
-    audioRef.current.pause();
-    audioRef.current.src = currentTrack.previewUrl;
-    audioRef.current.load();
-    sessionRef.current = undefined;
-    setIsPreview(true);
-    setState("paused");
-    setProgress(0);
-  }, [currentTrack, isAuthenticated]);
+    }
+    if (subscription.data?.provider !== "bachs" || !subscription.data.paidThrough) return;
+    const expiresAt = Date.parse(subscription.data.paidThrough);
+    let timer: ReturnType<typeof setTimeout>;
+    const checkExpiry = () => {
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) downgrade();
+      else timer = setTimeout(checkExpiry, Math.min(remaining, 2147483647));
+    };
+    checkExpiry();
+    return () => clearTimeout(timer);
+  }, [currentTrack, isAuthenticated, isAuthDialogOpen, isPremium, isPreview, subscription.isSuccess, subscription.data?.provider, subscription.data?.paidThrough]);
 
   const startSubscription = useCallback(async () => {
     const { data } = await supabase.auth.getSession();

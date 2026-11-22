@@ -3,10 +3,10 @@ export function checkoutCallbackUrl(appUrl, secret, reference, requestOrigin) {
   try { url = new URL(appUrl); } catch {
     throw Object.assign(new Error('The public application URL is not configured.'), { status: 503 });
   }
-  const localTest = secret?.startsWith('sk_test_') &&
+  const localTest = (secret?.startsWith('sk_test_') || secret?.startsWith('sk_sandbox_')) &&
     ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && url.protocol === 'http:';
   if ((url.protocol !== 'https:' && !localTest) || url.username || url.password) {
-    throw Object.assign(new Error('Billing requires HTTPS, or a loopback URL with a Paystack test key.'), { status: 503 });
+    throw Object.assign(new Error('Billing requires HTTPS, or a loopback URL with a sandbox key.'), { status: 503 });
   }
   let returnOrigin = url;
   if (localTest && typeof requestOrigin === 'string') {

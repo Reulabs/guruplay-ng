@@ -9,6 +9,8 @@ const subscriptionSchema = z.object({
   status: z.string(),
   paidThrough: z.string().nullable(),
   graceEndsAt: z.string().nullable(),
+  provider: z.string().nullable().optional(),
+  renewalMode: z.enum(["manual", "automatic"]).optional(),
 });
 
 export const subscriptionKey = (userId?: string) =>
@@ -77,6 +79,8 @@ export async function readSubscription(
     status: result.data.status,
     paidThrough: result.data.paidThrough,
     graceEndsAt: result.data.graceEndsAt,
+    provider: result.data.provider,
+    renewalMode: result.data.renewalMode,
   };
 }
 

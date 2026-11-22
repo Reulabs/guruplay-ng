@@ -16,6 +16,7 @@ import {
   verifySubscription,
 } from "@/hooks/use-subscription";
 import PremiumBadge from "@/components/account/PremiumBadge";
+import { UserType } from "@/lib/artist";
 
 export default function Subscription() {
   const [params] = useSearchParams();
@@ -26,8 +27,10 @@ export default function Subscription() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const reference = checkoutReference(params);
-  const hasCallback = params.has("reference") || params.has("trxref");
+  const hasCallback = params.has("reference") || params.has("trxref") || params.has("checkout_id");
+  const cancelled = params.get("cancelled") === "1";
   const userId = user?.id;
+  const returnPath = user?.userType === UserType.Artist || user?.userType === UserType.Admin ? "/dashboard" : "/";
   const result = useQuery({
     queryKey: ["subscription-page", userId, hasCallback, reference],
     enabled: !!userId && !isAuthLoading,
@@ -67,7 +70,7 @@ export default function Subscription() {
       return;
     closeUpgrade();
     sessionStorage.removeItem("guruplay-return-track");
-    navigate("/dashboard", { replace: true });
+    navigate(returnPath, { replace: true });
   }, [
     hasCallback,
     subscription?.entitled,
@@ -75,6 +78,7 @@ export default function Subscription() {
     result.isFetching,
     closeUpgrade,
     navigate,
+    returnPath,
   ]);
 
   const manage = async () => {
@@ -115,19 +119,27 @@ export default function Subscription() {
           result.data?.message ||
           (subscription?.entitled
             ? hasCallback
-              ? "Your subscription is active. Returning to your dashboard…"
-              : "Your subscription is active. Full listening is unlocked."
-            : "Subscribe monthly to listen to full tracks across the Guruplay catalog.");
+              ? "Your monthly pass is active. Taking you back to Guruplay…"
+              : "Your listening access is active. Enjoy full tracks across Guruplay."
+            : cancelled
+              ? "Checkout was cancelled. Your access hasn’t changed. You can try again whenever you’re ready."
+              : "Get a month of full-track listening for ₦1,000. Renew when you’re ready; there are no automatic charges.");
 
   return (
     <main className="mx-auto max-w-xl space-y-5 p-6 pt-16 text-white">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-bold">Guruplay subscription</h1>
+        <h1 className="text-3xl font-bold">Your Guruplay membership</h1>
         {subscription?.entitled && <PremiumBadge />}
       </div>
       <p aria-live="polite" className="leading-7 text-white/70">
         {message}
       </p>
+      {subscription?.paidThrough && subscription.entitled && (
+        <p className="text-sm leading-6 text-white/70">
+          Access until {new Intl.DateTimeFormat("en-NG", { dateStyle: "long", timeStyle: "short" }).format(new Date(subscription.paidThrough))}.
+          {subscription.renewalMode === "manual" && " Your pass does not renew automatically."}
+        </p>
+      )}
       {!isAuthLoading && !user && (
         <Button variant="outline" onClick={() => openAuthDialog("login")}>
           Sign in
@@ -165,17 +177,17 @@ export default function Subscription() {
           }}
           disabled={checkoutLoading}
         >
-          {checkoutLoading ? "Opening checkout…" : "Subscribe with Paystack"}
+          {checkoutLoading ? "Opening checkout…" : "Get a monthly pass · ₦1,000"}
         </Button>
       )}
-      {user && !hasCallback && subscription?.entitled && (
+      {user && !hasCallback && subscription?.entitled && subscription.renewalMode !== "manual" && (
         <Button onClick={() => void manage()} disabled={busy}>
           {busy ? "Opening…" : "Manage payment method"}
         </Button>
       )}
       <div>
-        <Link to="/dashboard" className="text-sm text-white/60 underline">
-          Back to dashboard
+        <Link to={returnPath} className="text-sm text-white/60 underline">
+          Back to Guruplay
         </Link>
       </div>
     </main>

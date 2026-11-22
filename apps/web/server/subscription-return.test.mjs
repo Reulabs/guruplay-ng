@@ -40,6 +40,8 @@ test("callback parsing supports provider references and rejects malformed links"
     checkoutReference(new URLSearchParams("trxref=actual")),
     "actual",
   );
+  assert.equal(checkoutReference(new URLSearchParams("checkout_id=chk_actual")), "chk_actual");
+  assert.equal(checkoutReference(new URLSearchParams("reference=guru_actual&checkout_id=chk_actual")), "guru_actual");
   assert.equal(
     checkoutReference(new URLSearchParams("reference=&trxref=actual")),
     "actual",

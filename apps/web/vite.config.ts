@@ -9,6 +9,9 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: process.env.PUBLIC_APP_URL
+      ? [new URL(process.env.PUBLIC_APP_URL).hostname]
+      : [],
   },
   plugins: [react(), {
     name: "music-api",
