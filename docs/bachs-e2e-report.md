@@ -39,6 +39,8 @@ An actual sandbox refund request returned `INSUFFICIENT_BALANCE`. Refund authori
 
 At the user's request, no further account-wide Bachs branding changes are being made. The application keeps Guruplay red and its own membership copy.
 
-Cleanup removed both disposable accounts, both generated songs, their original/processed audio and every preview under their fixture IDs. The temporary sandbox webhook was deleted; the production webhook was preserved. Existing users and subscriptions were not edited. Both browser builds were scanned against the configured server secrets with no matches.
+Cleanup removed three disposable accounts, three generated songs, their original/processed audio and every preview under their fixture IDs. The temporary sandbox webhook was deleted; the production webhook was preserved. Existing users and subscriptions were not edited. Both browser builds were scanned against the configured server secrets with no matches.
 
 The membership page reflowed at 320 CSS pixels without horizontal overflow. Screen-reader behavior, 200% text zoom and a full visual-contrast review remain manual checks; no full accessibility-conformance claim is made.
+
+The final production deployment `dpl_9QFZnfMa8nsk1vh8nXiB1eNqFWDL` is Ready. A fresh upload completed in eight seconds on its first attempt through the hosted flow. A disposable unpaid listener received HTTP 503 with “Checkout is not available yet. Please check back later or contact Guruplay support.” while merchant activation is pending. The final smoke fixtures were removed in a `finally` cleanup.

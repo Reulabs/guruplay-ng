@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-11-22T08:32:42.908Z",
+  "testedAt": "2026-11-22T08:36:52.344Z",
   "environment": "Bachs sandbox, local HTTPS app, production media APIs, real Supabase",
   "checks": [
     "anonymous checkout and reconciliation denied; unpaid listener has no full access",
@@ -17,10 +17,11 @@
     "bounded reusable processor claimed the real durable job and generated protected full audio plus a preview",
     "production upload completed through Cloudflare and Vercel with local workers stopped; real preview and sandbox-entitled private full audio worked",
     "Cloudflare two-minute cron independently claimed and completed a queued media job on Vercel without a manual dispatch or local worker",
-    "deployed live webhook rejects unsigned requests and safely ignores signed unsupported events; authenticated reconciliation succeeds"
+    "deployed live webhook rejects unsigned requests and safely ignores signed unsupported events; authenticated reconciliation succeeds",
+    "fresh final production upload completed in 8 seconds on its first attempt; unavailable merchant returned friendly HTTP 503 feedback"
   ],
-  "disposableAccountsRemoved": 2,
-  "testAudioRemoved": 2,
+  "disposableAccountsRemoved": 3,
+  "testAudioRemoved": 3,
   "limitations": [
     "Live merchant activation pending; payments:write scope corrected",
     "Real sandbox refund callback unverified: sandbox refund balance insufficient"
