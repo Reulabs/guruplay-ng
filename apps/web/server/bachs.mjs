@@ -42,6 +42,9 @@ export async function bachsRequest(config, route, { body, idempotencyKey } = {},
     return bachsRequest(config, route, { body, idempotencyKey }, retry + 1);
   }
   if (!response.ok || !result || typeof result !== 'object' || Array.isArray(result)) {
+    if (['ACCOUNT_NOT_ACTIVATED', 'FORBIDDEN'].includes(result?.error_code)) {
+      throw Object.assign(billingError(503, 'Checkout is not available yet. Please check back later or contact Guruplay support.'), { providerStatus: response.status });
+    }
     throw Object.assign(billingError(502, 'We couldn’t complete the payment request. Please try again shortly.'), { providerStatus: response.status });
   }
   return result;

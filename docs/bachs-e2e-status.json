@@ -1,9 +1,28 @@
 {
-  "testedAt": "2026-11-22T07:32:50.668Z",
-  "environment": "Bachs sandbox, local HTTP app, real Supabase",
+  "testedAt": "2026-11-22T08:32:42.908Z",
+  "environment": "Bachs sandbox, local HTTPS app, production media APIs, real Supabase",
   "checks": [
-    "anonymous checkout and reconciliation denied; unpaid listener has no full access"
+    "anonymous checkout and reconciliation denied; unpaid listener has no full access",
+    "concurrent checkout reused one provider session; client price ignored; unpaid callback did not unlock access",
+    "simultaneous first-time provider writes recovered safely with one idempotency key",
+    "real upload processed into preview and private full audio; unpaid playback denied",
+    "documented declined sandbox card gave readable feedback and never granted access",
+    "verified payment grants manual-renewal Premium; another account cannot claim it; replay never extends access",
+    "sandbox purchase cannot unlock the live-configured application",
+    "paid listener received a private signed stream and downloaded real processed audio",
+    "real Bachs sandbox webhook was received, signature checked and processed",
+    "expired monthly pass loses Premium and full playback immediately",
+    "settings persisted without privilege escalation; favourites and playlist CRUD stayed isolated and functional",
+    "direct client ledger access and forged grants denied; authentic webhook replay stayed idempotent; tampering rejected",
+    "bounded reusable processor claimed the real durable job and generated protected full audio plus a preview",
+    "production upload completed through Cloudflare and Vercel with local workers stopped; real preview and sandbox-entitled private full audio worked",
+    "Cloudflare two-minute cron independently claimed and completed a queued media job on Vercel without a manual dispatch or local worker",
+    "deployed live webhook rejects unsigned requests and safely ignores signed unsupported events; authenticated reconciliation succeeds"
   ],
   "disposableAccountsRemoved": 2,
-  "testAudioRemoved": false
+  "testAudioRemoved": 2,
+  "limitations": [
+    "Live merchant activation pending; payments:write scope corrected",
+    "Real sandbox refund callback unverified: sandbox refund balance insufficient"
+  ]
 }

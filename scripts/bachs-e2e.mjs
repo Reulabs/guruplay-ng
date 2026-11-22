@@ -302,7 +302,7 @@ if (phase === 'setup' || phase === 'checkout') {
     checked(await service.from('users').delete().eq('id', account.id));
     checked(await service.auth.admin.deleteUser(account.id));
   }
-  await writeFile('docs/bachs-e2e-status.json', JSON.stringify({ testedAt: new Date().toISOString(), environment: 'Bachs sandbox, local HTTPS app, production media APIs, real Supabase', checks: [...new Set(fixture.checks)], disposableAccountsRemoved: fixture.accounts.length, testAudioRemoved: [fixture.songId, fixture.hostedSongId].filter(Boolean).length }, null, 2) + '\n');
+  await writeFile('docs/bachs-e2e-status.json', JSON.stringify({ testedAt: new Date().toISOString(), environment: 'Bachs sandbox, local HTTPS app, production media APIs, real Supabase', checks: [...new Set(fixture.checks)], limitations: fixture.limitations || [], disposableAccountsRemoved: fixture.accounts.length, testAudioRemoved: [fixture.songId, fixture.hostedSongId].filter(Boolean).length }, null, 2) + '\n');
   await rm(file);
   console.log('Temporary accounts, passes and media removed.');
 } else {

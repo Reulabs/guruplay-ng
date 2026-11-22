@@ -98,3 +98,12 @@ test('an in-progress provider write retries the exact operation while uncertain 
   assert.equal(result.checkout_id, 'chk_same');
   assert.equal(requests.length, 2); assert.deepEqual(requests[0], requests[1]);
 });
+
+test('an unavailable merchant gives readable feedback without exposing account setup details', async (t) => {
+  const config = bachsConfig({ BACHS_ENVIRONMENT: 'sandbox', BACHS_SANDBOX_SECRET_KEY: 'sk_sandbox_test' });
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ error_code: 'ACCOUNT_NOT_ACTIVATED', detail: 'Internal merchant setup information' }, { status: 400 }));
+  await assert.rejects(bachsRequest(config, '/checkout-sessions', { body: {}, idempotencyKey: 'guru-test' }), {
+    status: 503, providerStatus: 400,
+    message: 'Checkout is not available yet. Please check back later or contact Guruplay support.',
+  });
+});

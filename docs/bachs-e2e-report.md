@@ -13,7 +13,7 @@ Verified on 22 November 2026 using real Bachs sandbox requests, the configured S
 
 ## Application checks
 
-`npm run check` passed both application builds, TypeScript checks, lint and 37 automated tests. Lint retains four pre-existing Fast Refresh warnings. Browser checks confirmed keyboard seeking beyond the preview limit and the paid membership state. Automated checks do not establish full WCAG conformance.
+`npm run check` passed both application builds, TypeScript checks, lint and 38 automated tests. Lint retains four pre-existing Fast Refresh warnings. Browser checks confirmed keyboard seeking beyond the preview limit and the paid membership state. Automated checks do not establish full WCAG conformance.
 
 ## Hosting
 
@@ -33,8 +33,12 @@ The Worker uses `redirect: manual` and accepts only HTTP 202, because Cloudflare
 
 ## Provider limits discovered
 
-The supplied live Bachs key returned HTTP 403: `API key missing required scope: payments:write`. Live checkout acceptance requires a replacement key with that scope. No live card payment was attempted.
+The original live key lacked `payments:write`; the user corrected its access. Bachs then returned HTTP 400 `ACCOUNT_NOT_ACTIVATED`: the merchant account requires completed business onboarding and approval before live payments. The user will complete that onboarding. Live checkout acceptance remains blocked by activation. No live card payment was attempted.
 
 An actual sandbox refund request returned `INSUFFICIENT_BALANCE`. Refund authorization, revocation and replay protection passed the local database tests, but a real provider refund webhook remains unverified until the sandbox refund balance is funded. No real funds were moved to work around this limitation.
 
 At the user's request, no further account-wide Bachs branding changes are being made. The application keeps Guruplay red and its own membership copy.
+
+Cleanup removed both disposable accounts, both generated songs, their original/processed audio and every preview under their fixture IDs. The temporary sandbox webhook was deleted; the production webhook was preserved. Existing users and subscriptions were not edited. Both browser builds were scanned against the configured server secrets with no matches.
+
+The membership page reflowed at 320 CSS pixels without horizontal overflow. Screen-reader behavior, 200% text zoom and a full visual-contrast review remain manual checks; no full accessibility-conformance claim is made.
