@@ -130,8 +130,8 @@ const PlayerBar = () => {
             <DialogHeader>
               <DialogTitle>Enjoy the full track</DialogTitle>
               <DialogDescription className="text-white/60">
-                Your free preview has ended. Subscribe to Guruplay for full
-                catalog access.
+                Your free preview has ended. Get a month of full-track listening
+                for ₦1,000. No automatic renewal.
               </DialogDescription>
             </DialogHeader>
             {checkoutError && (
@@ -158,7 +158,7 @@ const PlayerBar = () => {
               >
                 {checkoutLoading
                   ? "Opening checkout…"
-                  : "Subscribe with Paystack"}
+                  : "Get a monthly pass"}
               </Button>
             </div>
           </DialogContent>

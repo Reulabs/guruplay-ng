@@ -156,3 +156,34 @@ test("webhook routing preserves the exact signed body before payload validation"
       else process.env[key] = previous[key];
   }
 });
+
+test("the Bachs adapter preserves signed bytes and rejects stale webhook deliveries", async () => {
+  const values = {
+    VITE_SUPABASE_URL: "https://test.invalid",
+    VITE_SUPABASE_ANON_KEY: "test-anon",
+    SUPABASE_SERVICE_ROLE_KEY: "test-service",
+    BACHS_ENVIRONMENT: "sandbox",
+    BACHS_SANDBOX_SECRET_KEY: "sk_sandbox_test",
+    BACHS_SANDBOX_WEBHOOK_SECRET: "whsec_test",
+  };
+  const previous = Object.fromEntries(Object.keys(values).map((key) => [key, process.env[key]]));
+  Object.assign(process.env, values);
+  try {
+    for (const stale of [false, true]) {
+      const rawBody = Buffer.from(' { "type": 123, "data": {} }\n');
+      const timestamp = String(Math.floor(Date.now() / 1000) - (stale ? 301 : 0));
+      const signature = createHmac("sha256", "whsec_test").update(`${timestamp}.`).update(rawBody).digest("hex");
+      const res = { statusCode: 0, setHeader() {}, end(body) { this.body = JSON.parse(body); } };
+      await handler({ url: "/api/music?__route=webhooks/bachs", method: "POST", headers: {
+        "x-bachs-signature-v2": `t=${timestamp},v1=${signature}`,
+      }, rawBody }, res);
+      assert.equal(res.statusCode, stale ? 401 : 400);
+      assert.equal(res.body.error, stale ? "Invalid webhook signature." : "Invalid webhook payload.");
+    }
+  } finally {
+    for (const key of Object.keys(values)) {
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
+    }
+  }
+});

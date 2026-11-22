@@ -136,7 +136,7 @@ export default function Home() {
                 Stay for the whole song.
               </h2>
               <p className="mt-1 text-sm leading-6 text-white/45">
-                Full-track listening. One monthly membership.
+                Full-track listening. ₦1,000 for one month. Renew on your terms.
               </p>
             </div>
           </div>

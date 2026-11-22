@@ -3,6 +3,8 @@ export interface SubscriptionStatus {
   status: string;
   paidThrough: string | null;
   graceEndsAt: string | null;
+  provider?: string | null;
+  renewalMode?: "manual" | "automatic";
 }
 
 export function checkoutReference(params: URLSearchParams): string | null {
@@ -10,6 +12,7 @@ export function checkoutReference(params: URLSearchParams): string | null {
   const reference = (
     references[references.length - 1] ||
     params.get("trxref") ||
+    params.get("checkout_id") ||
     ""
   ).trim();
   return /^[A-Za-z0-9._=-]{1,100}$/.test(reference) ? reference : null;

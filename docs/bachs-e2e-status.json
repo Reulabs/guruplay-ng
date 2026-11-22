@@ -1,0 +1,9 @@
+{
+  "testedAt": "2026-11-22T07:32:50.668Z",
+  "environment": "Bachs sandbox, local HTTP app, real Supabase",
+  "checks": [
+    "anonymous checkout and reconciliation denied; unpaid listener has no full access"
+  ],
+  "disposableAccountsRemoved": 2,
+  "testAudioRemoved": false
+}

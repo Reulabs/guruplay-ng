@@ -2,7 +2,9 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import { createClient } from '@supabase/supabase-js';
 import { personalApi, preferences } from './personal-api.mjs';
 import { rankRecommendations } from './recommendations.mjs';
-import { checkoutCallbackUrl, findPaymentSubscription, matchesCheckout } from './billing.mjs';
+import { findPaymentSubscription, matchesCheckout } from './billing.mjs';
+import { startBachsCheckout, verifyBachsCheckout, receiveBachsWebhook, reconcileBachsPayments } from './bachs-billing.mjs';
+import { dispatchMediaJob } from './media-dispatch.mjs';
 
 const json = (res, status, value) => {
   res.statusCode = status;
@@ -41,7 +43,6 @@ const getBody = async (req) => {
   catch { throw createApiError(400, 'Send valid JSON.'); }
 };
 
-const safeReference = () => `guru-${Date.now()}-${randomUUID().replaceAll('-', '')}`;
 const userClient = (config, token) => createClient(config.url, config.anon, {
   auth: { persistSession: false, autoRefreshToken: false },
   global: { headers: { Authorization: `Bearer ${token}` } },
@@ -61,7 +62,9 @@ async function requireUser(req, config, service) {
 
 export const hasEntitlement = (subscription, now = Date.now()) => {
   if (!subscription || !['active', 'non_renewing', 'attention'].includes(subscription.status)) return false;
-  return new Date(subscription.paid_through).getTime() + 24 * 60 * 60 * 1000 >= now;
+  const grace = subscription.provider === 'bachs' ? 0 : 24 * 60 * 60 * 1000;
+  const expiresAt = new Date(subscription.paid_through).getTime();
+  return grace ? expiresAt + grace >= now : expiresAt > now;
 };
 
 const paystackRequest = async (secret, route, body) => {
@@ -77,39 +80,17 @@ const paystackRequest = async (secret, route, body) => {
 };
 
 async function ensureEntitlement(service, userId) {
-  const { data, error } = await service.from('subscriptions').select('*').eq('user_id', userId).maybeSingle();
-  if (error) throw createApiError(503, 'Unable to check subscription status.');
-  return data;
-}
-
-async function startCheckout(req, res, config, service, actor) {
-  if (!config.paystackKey || !process.env.PAYSTACK_PLAN_CODE || !process.env.PAYSTACK_MONTHLY_AMOUNT || !process.env.PAYSTACK_CURRENCY) {
-    throw createApiError(503, 'Monthly billing is not configured.');
+  const environment = process.env.BACHS_ENVIRONMENT || 'live';
+  const [{ data: legacy, error: legacyError }, { data: pass, error: passError }] = await Promise.all([
+    service.from('subscriptions').select('*').eq('user_id', userId).maybeSingle(),
+    service.from('bachs_payment_passes').select('paid_through').eq('user_id', userId)
+      .eq('environment', environment).is('revoked_at', null).order('paid_through', { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  if (legacyError || passError) throw createApiError(503, 'Unable to check listening access. Please try again shortly.');
+  if (pass && (!hasEntitlement(legacy) || Date.parse(pass.paid_through) > Date.parse(legacy.paid_through))) {
+    return { provider: 'bachs', status: 'non_renewing', paid_through: pass.paid_through };
   }
-  if (hasEntitlement(await ensureEntitlement(service, actor.user.id))) {
-    throw createApiError(409, 'Your subscription is already active. Manage your existing subscription instead.');
-  }
-  const reference = safeReference();
-  const planCode = process.env.PAYSTACK_PLAN_CODE;
-  const amount = Number(process.env.PAYSTACK_MONTHLY_AMOUNT);
-  const currency = process.env.PAYSTACK_CURRENCY.toUpperCase();
-  if (!/^sk_(test|live)_/.test(config.paystackKey)) throw createApiError(503, 'A Paystack secret key is required for billing.');
-  const callbackUrl = checkoutCallbackUrl(process.env.PUBLIC_APP_URL, config.paystackKey, reference, req.headers.origin);
-  if (!Number.isSafeInteger(amount) || amount <= 0 || !/^[A-Z]{3}$/.test(currency)) throw createApiError(503, 'Billing configuration is invalid.');
-  const { error } = await service.from('billing_checkout_attempts').insert({
-    reference, user_id: actor.user.id, plan_code: planCode, expected_amount: amount, currency,
-  });
-  if (error) throw createApiError(503, 'Unable to start checkout. Try again shortly.');
-  const transaction = await paystackRequest(config.paystackKey, '/transaction/initialize', {
-    email: actor.user.email,
-    amount,
-    currency,
-    plan: planCode,
-    reference,
-    callback_url: callbackUrl,
-    metadata: { user_id: actor.user.id, purpose: 'guruplay_monthly_subscription' },
-  });
-  json(res, 200, { authorizationUrl: transaction.authorization_url, reference });
+  return legacy;
 }
 
 async function verifyCheckout(req, res, config, service, actor, reference) {
@@ -246,7 +227,12 @@ async function receiveWebhook(req, res, config, service) {
 async function reconcilePayments(req, res, config, service) {
   const supplied = req.headers.authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!process.env.CRON_SECRET || supplied !== process.env.CRON_SECRET) throw createApiError(401, 'Reconciliation authorization failed.');
-  if (!config.paystackKey) throw createApiError(503, 'Billing reconciliation is not configured.');
+  const bachs = await reconcileBachsPayments(service);
+  if (!config.paystackKey) {
+    const { error } = await service.rpc('refresh_music_aggregates');
+    if (error) throw createApiError(503, 'Payment reconciliation completed but play totals could not be refreshed.');
+    return json(res, 200, bachs);
+  }
   const cutoff = new Date(Date.now() - 5 * 60_000).toISOString();
   const { data: attempts, error: attemptsError } = await service.from('billing_checkout_attempts').select('*')
     .eq('status', 'initialized').lt('created_at', cutoff).order('created_at', { ascending: true }).limit(50);
@@ -283,7 +269,7 @@ async function reconcilePayments(req, res, config, service) {
   }
   const { error: aggregateError } = await service.rpc('refresh_music_aggregates');
   if (aggregateError) throw createApiError(503, 'Payment reconciliation completed but play aggregates could not be refreshed.');
-  json(res, 200, { verifiedCheckouts: verifiedCount, refreshedSubscriptions: refreshedCount });
+  json(res, 200, { ...bachs, legacyVerifiedCheckouts: verifiedCount, refreshedSubscriptions: refreshedCount });
 }
 
 async function createStreamSession(res, service, actor, songId) {
@@ -300,8 +286,11 @@ async function createStreamSession(res, service, actor, songId) {
     .eq('user_id', actor.user.id).gte('created_at', new Date(createdAt - 60_000).toISOString());
   if (limitError) throw createApiError(503, 'Unable to authorize playback right now.');
   if ((recentSessionCount || 0) >= 30) throw createApiError(429, 'Too many playback requests. Wait a moment and try again.');
-  const expiresAt = new Date(createdAt + 5 * 60_000).toISOString();
-  const { data: signed, error: signError } = await service.storage.from('song-audio').createSignedUrl(asset.full_object_path, 300);
+  const paidUntil = Date.parse(subscription.paid_through) + (subscription.provider === 'bachs' ? 0 : 86400_000);
+  const lifetime = Math.min(300, Math.floor((paidUntil - createdAt) / 1000));
+  if (lifetime < 1) throw createApiError(402, 'Your listening access has ended. Get a new monthly pass to continue.');
+  const expiresAt = new Date(createdAt + lifetime * 1000).toISOString();
+  const { data: signed, error: signError } = await service.storage.from('song-audio').createSignedUrl(asset.full_object_path, lifetime);
   if (signError || !signed?.signedUrl) throw createApiError(503, 'Full audio is temporarily unavailable.');
   const { data: session, error: sessionError } = await service.from('stream_sessions').insert({
     user_id: actor.user.id, song_id: songId, expires_at: expiresAt,
@@ -356,6 +345,7 @@ export default async function musicApi(req, res) {
     const path = url.pathname.replace(/^\/api\/v1\/?/, '').split('/').filter(Boolean);
 
     if (path[0] === 'health' && req.method === 'GET') return json(res, 200, { status: 'ok' });
+    if (path[0] === 'webhooks' && path[1] === 'bachs' && req.method === 'POST') return json(res, 200, await receiveBachsWebhook(service, await readRawBody(req), req.headers));
     if (path[0] === 'webhooks' && path[1] === 'paystack' && req.method === 'POST') return await receiveWebhook(req, res, config, service);
     if (path[0] === 'internal' && path[1] === 'reconcile' && req.method === 'GET') return await reconcilePayments(req, res, config, service);
 
@@ -389,6 +379,7 @@ export default async function musicApi(req, res) {
           if (previous.title !== title || previous.artist !== artistName || previous.genre !== genre) throw createApiError(409, 'This upload already exists with different details. Check My uploads.');
           const { data: job, error: jobError } = await service.from('media_jobs').select('id').eq('song_id', uploadId).maybeSingle();
           if (jobError || !job) throw createApiError(409, 'This upload is still being registered. Try again shortly.');
+          if (previous.processing_status !== 'ready') await dispatchMediaJob();
           return json(res, 202, { id: previous.id, processingStatus: previous.processing_status });
         }
       }
@@ -411,6 +402,7 @@ export default async function musicApi(req, res) {
         await service.storage.from('song-audio').remove([body.audioPath]);
         throw createApiError(503, 'Song upload was rolled back because processing could not be queued.');
       }
+      await dispatchMediaJob();
       return json(res, 202, { id: song.id, processingStatus: 'uploaded' });
     }
 
@@ -480,19 +472,22 @@ export default async function musicApi(req, res) {
       if (asset?.preview_object_path) await service.storage.from('song-previews').remove([asset.preview_object_path]);
       return json(res, 200, { deleted: true });
     }
-    if (path[0] === 'billing' && path[1] === 'checkout' && req.method === 'POST') return await startCheckout(req, res, config, service, actor);
+    if (path[0] === 'billing' && path[1] === 'checkout' && req.method === 'POST') return json(res, 200, await startBachsCheckout(req, service, actor));
     if (path[0] === 'billing' && path[1] === 'verify' && req.method === 'POST') {
       const body = await getBody(req);
+      if (await verifyBachsCheckout(service, actor.user.id, body.reference)) return json(res, 200, { status: 'verified' });
       return await verifyCheckout(req, res, config, service, actor, body.reference);
     }
     if (path[0] === 'billing' && path[1] === 'subscription' && req.method === 'GET') {
       const subscription = await ensureEntitlement(service, actor.user.id);
       return json(res, 200, { entitled: hasEntitlement(subscription), status: subscription?.status || 'inactive', paidThrough: subscription?.paid_through || null,
-        graceEndsAt: subscription?.paid_through ? new Date(new Date(subscription.paid_through).getTime() + 24 * 60 * 60_000).toISOString() : null });
+        provider: subscription?.provider || null, renewalMode: subscription?.provider === 'bachs' ? 'manual' : 'automatic',
+        graceEndsAt: subscription?.paid_through && subscription.provider !== 'bachs' ? new Date(new Date(subscription.paid_through).getTime() + 24 * 60 * 60_000).toISOString() : null });
     }
     if (path[0] === 'billing' && path[1] === 'manage' && req.method === 'POST') {
-      if (!config.paystackKey) throw createApiError(503, 'Billing management is not configured.');
       const subscription = await ensureEntitlement(service, actor.user.id);
+      if (subscription?.provider === 'bachs') return json(res, 200, { message: 'Your monthly pass does not renew automatically. You can buy a new pass when this one ends.' });
+      if (!config.paystackKey) throw createApiError(503, 'Billing management is temporarily unavailable. Please try again shortly.');
       if (!subscription?.subscription_code || !subscription.customer_code) throw createApiError(404, 'No Paystack subscription is available to manage.');
       const data = await paystackRequest(config.paystackKey, `/subscription/${encodeURIComponent(subscription.subscription_code)}/manage/email`, {});
       return json(res, 200, { message: data.message || 'Management link sent to your email.' });
