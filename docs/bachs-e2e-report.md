@@ -22,3 +22,19 @@ The Cloudflare scheduler is deployed on Workers Free at `guruplay-media-schedule
 ## Scope
 
 The selected product is a NGN 1,000 monthly pass with manual renewal. The earlier proposed artist-priced, song-specific weekly access model is not part of this monthly-pass implementation. Existing Paystack handling is retained for previous customers. Sandbox proof is separate from a real live charge and settlement.
+
+## Production media acceptance
+
+The root Vercel deployment `dpl_7t1C8SuWGpaFhZVRod45kFWiRHXx` reached Ready and is aliased to `www.guruplay.com.ng`. Its packaged Linux FFmpeg/ffprobe function completed generated audio against the real durable queue and private storage. Anonymous processor requests returned 401; authenticated Cloudflare dispatch returned 202.
+
+A separate acceptance run requeued only the generated test track and sent no manual dispatch. The Cloudflare two-minute cron independently claimed and completed it on Vercel with local media workers stopped. The public preview downloaded successfully; a paid sandbox listener obtained the processed private full audio through the sandbox API. The live production API correctly refused to treat that sandbox pass as live entitlement.
+
+The Worker uses `redirect: manual` and accepts only HTTP 202, because Cloudflare does not implement Fetch's `redirect: error` mode. Redirects are refused rather than forwarding credentials. Cloudflare Settings confirmed the dispatch token is encrypted and the cron is Every 2 minutes, with logs and traces enabled.
+
+## Provider limits discovered
+
+The supplied live Bachs key returned HTTP 403: `API key missing required scope: payments:write`. Live checkout acceptance requires a replacement key with that scope. No live card payment was attempted.
+
+An actual sandbox refund request returned `INSUFFICIENT_BALANCE`. Refund authorization, revocation and replay protection passed the local database tests, but a real provider refund webhook remains unverified until the sandbox refund balance is funded. No real funds were moved to work around this limitation.
+
+At the user's request, no further account-wide Bachs branding changes are being made. The application keeps Guruplay red and its own membership copy.

@@ -21,7 +21,7 @@ test('authorized and scheduled dispatch call only the fixed processor and preser
     calls += 1;
     assert.equal(url, 'https://www.guruplay.com.ng/api/media-worker');
     assert.equal(options.headers.Authorization, 'Bearer test-dispatch-secret');
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     return Response.json({}, { status: accepted ? 202 : 503 });
   });
   const response = await worker.fetch(new Request('https://worker.example/dispatch?target=https://untrusted.example', {

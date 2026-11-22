@@ -13,9 +13,12 @@ export async function dispatch(env) {
   if (!env.MEDIA_WORKER_SECRET) throw new Error('Media dispatch is not configured.');
   const response = await fetch(processorUrl, {
     method: 'POST', headers: { Authorization: `Bearer ${env.MEDIA_WORKER_SECRET}` },
-    redirect: 'error', signal: AbortSignal.timeout(10000),
+    redirect: 'manual', signal: AbortSignal.timeout(10000),
   });
-  if (response.status !== 202) throw new Error(`Media processor did not accept dispatch (${response.status}).`);
+  if (response.status !== 202) {
+    console.error(JSON.stringify({ event: 'media-processor-rejected-dispatch', status: response.status }));
+    throw new Error(`Media processor did not accept dispatch (${response.status}).`);
+  }
   console.info(JSON.stringify({ event: 'media-dispatch-accepted' }));
 }
 

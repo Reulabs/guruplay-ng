@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { createClient } from '@supabase/supabase-js';
 import { runMediaJob } from '../apps/web/server/media-jobs.mjs';
+import { bachsConfig, bachsRequest } from '../apps/web/server/bachs.mjs';
 
 const file = '/tmp/guruplay-bachs-e2e.json';
 const baseUrl = process.env.BACHS_TEST_APP_URL || 'http://127.0.0.1:8090';
@@ -24,8 +25,8 @@ async function actor(account) {
   const auth = checked(await db.auth.signInWithPassword({ email: account.email, password: account.password }));
   return { db, token: auth.session.access_token, id: auth.user.id };
 }
-async function request(path, token, method = 'GET', body, expected = 200) {
-  const response = await fetch(`${baseUrl}/api/v1/${path}`, {
+async function request(path, token, method = 'GET', body, expected = 200, origin = baseUrl) {
+  const response = await fetch(`${origin}/api/v1/${path}`, {
     method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(25000),
   });
@@ -107,6 +108,70 @@ if (phase === 'setup' || phase === 'checkout') {
   assert.equal(result.status, 'completed');
   assert.equal(checked(await service.from('songs').select('processing_status').eq('id', fixture.songId).single()).processing_status, 'ready');
   await pass('bounded reusable processor claimed the real durable job and generated protected full audio plus a preview');
+} else if (phase === 'hosted') {
+  const origin = 'https://www.guruplay.com.ng';
+  const admin = await actor({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD });
+  if (!fixture.hostedSongId) {
+    fixture.hostedSongId = randomUUID();
+    fixture.hostedSourcePath = `${admin.id}/${fixture.hostedSongId}-hosted-e2e.wav`;
+    await save(fixture);
+    checked(await service.storage.from('song-audio').upload(fixture.hostedSourcePath, await readFile('/tmp/guruplay-bachs-e2e.wav'), { contentType: 'audio/wav' }));
+    await request('media/songs/upload', admin.token, 'POST', {
+      uploadId: fixture.hostedSongId, audioPath: fixture.hostedSourcePath,
+      title: '[TEST] Hosted audio processing', artist: 'Guruplay sandbox', genre: 'Ambient',
+    }, 202, origin);
+  }
+  let ready = false;
+  for (let i = 0; i < 100; i++) {
+    const song = checked(await service.from('songs').select('processing_status').eq('id', fixture.hostedSongId).single());
+    if (song.processing_status === 'ready') { ready = true; break; }
+    if (song.processing_status === 'failed') throw new Error('Hosted audio processing failed.');
+    if (i % 15 === 0) console.log('Waiting for hosted audio processing:', song.processing_status);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  assert.equal(ready, true);
+  const job = checked(await service.from('media_jobs').select('status,attempts').eq('song_id', fixture.hostedSongId).single());
+  assert.equal(job.status, 'completed');
+  const catalog = checked(await client().from('public_catalog').select('id,preview_object_path').eq('id', fixture.hostedSongId).single());
+  const preview = await fetch(client().storage.from('song-previews').getPublicUrl(catalog.preview_object_path).data.publicUrl);
+  assert.equal(preview.status, 200);
+  assert.ok((await preview.arrayBuffer()).byteLength > 0);
+  const listener = await actor(fixture.accounts[0]);
+  assert.equal((await request('billing/subscription', listener.token, 'GET', undefined, 200, origin)).entitled, false);
+  await request(`streams/${fixture.hostedSongId}/session`, listener.token, 'POST', {}, 402, origin);
+  const stream = await request(`streams/${fixture.hostedSongId}/session`, listener.token, 'POST', {});
+  const full = await fetch(stream.url, { headers: { Range: 'bytes=0-511' } });
+  assert.ok([200, 206].includes(full.status));
+  await pass('production upload completed through Cloudflare and Vercel with local workers stopped; real preview and sandbox-entitled private full audio worked');
+} else if (phase === 'live-checkout') {
+  const other = await actor(fixture.accounts[1]);
+  fixture.liveCheckout = await request('billing/checkout', other.token, 'POST', {}, 200, 'https://www.guruplay.com.ng');
+  await save(fixture);
+  assert.equal(new URL(fixture.liveCheckout.authorizationUrl).hostname, 'checkout.bachs.io');
+  const row = checked(await service.from('bachs_checkouts').select('environment,expected_amount,currency,request_body').eq('reference', fixture.liveCheckout.reference).single());
+  assert.equal(row.environment, 'live'); assert.equal(row.expected_amount, 100000); assert.equal(row.currency, 'NGN');
+  assert.equal(new URL(row.request_body.success_url).origin, 'https://www.guruplay.com.ng');
+  await request('billing/verify', other.token, 'POST', { reference: fixture.liveCheckout.reference }, 409, 'https://www.guruplay.com.ng');
+  assert.equal((await request('billing/subscription', other.token, 'GET', undefined, 200, 'https://www.guruplay.com.ng')).entitled, false);
+  await pass('production live checkout initialized at NGN 1000 with the correct HTTPS callback; unpaid verification did not grant access; no live payment submitted');
+} else if (phase === 'scheduled') {
+  assert.ok(fixture.hostedSongId && fixture.hostedSourcePath);
+  assert.equal(checked(await service.from('songs').select('title').eq('id', fixture.hostedSongId).single()).title, '[TEST] Hosted audio processing');
+  if (!fixture.scheduledStarted) {
+    checked(await service.from('songs').update({ processing_status: 'uploaded' }).eq('id', fixture.hostedSongId));
+    checked(await service.from('song_assets').update({ full_object_path: fixture.hostedSourcePath }).eq('song_id', fixture.hostedSongId));
+    checked(await service.from('media_jobs').update({ status: 'queued', attempts: 0, available_at: new Date().toISOString(), lease_expires_at: null, leased_by: null }).eq('song_id', fixture.hostedSongId));
+    fixture.scheduledStarted = new Date().toISOString(); await save(fixture);
+  }
+  let completed = false;
+  for (let i = 0; i < 100; i++) {
+    const job = checked(await service.from('media_jobs').select('status,attempts').eq('song_id', fixture.hostedSongId).single());
+    if (job.status === 'completed') { completed = true; break; }
+    if (i % 10 === 0) console.log('Waiting for Cloudflare cron only:', job.status);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+  assert.equal(completed, true);
+  await pass('Cloudflare two-minute cron independently claimed and completed a queued media job on Vercel without a manual dispatch or local worker');
 } else if (phase === 'paid') {
   const listener = await actor(fixture.accounts[0]), other = await actor(fixture.accounts[1]);
   await request('billing/verify', other.token, 'POST', { reference: fixture.checkout.reference }, 404);
@@ -135,6 +200,30 @@ if (phase === 'setup' || phase === 'checkout') {
   const events = checked(await service.from('bachs_webhook_events').select('event_type,status').eq('environment', 'sandbox'));
   assert.ok(events.some((event) => event.event_type === 'checkout.completed' && event.status === 'processed'));
   await pass('real Bachs sandbox webhook was received, signature checked and processed');
+} else if (phase === 'refund') {
+  const listener = await actor(fixture.accounts[0]);
+  const config = bachsConfig({ ...process.env, BACHS_ENVIRONMENT: 'sandbox' });
+  assert.match(fixture.accounts[0].email, /^guru-bachs-\d+-listener@example.com$/);
+  const checkout = checked(await service.from('bachs_checkouts').select('payment_id,customer_email').eq('reference', fixture.checkout.reference).eq('environment', 'sandbox').single());
+  assert.equal(checkout.customer_email, fixture.accounts[0].email);
+  const reference = `refund-${fixture.checkout.reference}`;
+  const refund = await bachsRequest(config, '/refunds', { body: {
+    charge_id: checkout.payment_id, reference, reason: 'Disposable Guruplay sandbox acceptance test',
+    idempotency_key: reference, simulated_outcome: 'success',
+  }, idempotencyKey: reference });
+  assert.ok(refund.refund_id);
+  let revoked = false;
+  for (let i = 0; i < 40; i++) {
+    const pass = checked(await service.from('bachs_payment_passes').select('revoked_at').eq('checkout_reference', fixture.checkout.reference).single());
+    if (pass.revoked_at) { revoked = true; break; }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  assert.equal(revoked, true);
+  assert.equal((await request('billing/subscription', listener.token)).entitled, false);
+  const result = await request('billing/verify', listener.token, 'POST', { reference: fixture.checkout.reference }, 409);
+  assert.match(result.error, /refunded/);
+  await request(`streams/${fixture.songId}/session`, listener.token, 'POST', {}, 402);
+  await pass('real sandbox full refund webhook revoked Premium and full playback; callback replay could not reactivate the refunded pass');
 } else if (phase === 'permissions') {
   const listener = await actor(fixture.accounts[0]);
   for (const table of ['bachs_checkouts', 'bachs_payment_passes', 'bachs_webhook_events']) {
@@ -195,13 +284,15 @@ if (phase === 'setup' || phase === 'checkout') {
     checked(await service.from('bachs_payment_passes').update({ paid_from: row.paid_from, paid_through: row.paid_through }).eq('checkout_reference', fixture.checkout.reference));
   }
 } else if (phase === 'cleanup') {
-  if (fixture.songId) {
-    const assets = checked(await service.from('song_assets').select('full_object_path,preview_object_path').eq('song_id', fixture.songId).maybeSingle());
-    if (assets?.full_object_path) checked(await service.storage.from('song-audio').remove([assets.full_object_path]));
-    if (assets?.preview_object_path) checked(await service.storage.from('song-previews').remove([assets.preview_object_path]));
-    checked(await service.from('songs').delete().eq('id', fixture.songId));
+  for (const songId of [fixture.songId, fixture.hostedSongId].filter(Boolean)) {
+    for (const bucket of ['song-audio', 'song-previews']) {
+      const files = checked(await service.storage.from(bucket).list(songId));
+      if (files.length) checked(await service.storage.from(bucket).remove(files.map((item) => `${songId}/${item.name}`)));
+    }
+    checked(await service.from('songs').delete().eq('id', songId));
   }
   if (fixture.sourcePath) checked(await service.storage.from('song-audio').remove([fixture.sourcePath]));
+  if (fixture.hostedSourcePath) checked(await service.storage.from('song-audio').remove([fixture.hostedSourcePath]));
   const attempts = checked(await service.from('bachs_checkouts').select('provider_checkout_id,payment_id').in('user_id', fixture.accounts.map((account) => account.id)));
   const checkoutIds = attempts.map((item) => item.provider_checkout_id).filter(Boolean);
   const paymentIds = attempts.map((item) => item.payment_id).filter(Boolean);
@@ -211,9 +302,9 @@ if (phase === 'setup' || phase === 'checkout') {
     checked(await service.from('users').delete().eq('id', account.id));
     checked(await service.auth.admin.deleteUser(account.id));
   }
-  await writeFile('docs/bachs-e2e-status.json', JSON.stringify({ testedAt: new Date().toISOString(), environment: 'Bachs sandbox, local HTTP app, real Supabase', checks: fixture.checks, disposableAccountsRemoved: fixture.accounts.length, testAudioRemoved: !!fixture.songId }, null, 2) + '\n');
+  await writeFile('docs/bachs-e2e-status.json', JSON.stringify({ testedAt: new Date().toISOString(), environment: 'Bachs sandbox, local HTTPS app, production media APIs, real Supabase', checks: [...new Set(fixture.checks)], disposableAccountsRemoved: fixture.accounts.length, testAudioRemoved: [fixture.songId, fixture.hostedSongId].filter(Boolean).length }, null, 2) + '\n');
   await rm(file);
   console.log('Temporary accounts, passes and media removed.');
 } else {
-  throw new Error('Choose setup, checkout, failed, media, processor, paid, permissions, personal, expiry, or cleanup.');
+  throw new Error('Choose setup, checkout, failed, media, processor, hosted, scheduled, live-checkout, paid, refund, permissions, personal, expiry, or cleanup.');
 }
